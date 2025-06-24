@@ -77,12 +77,14 @@
 包含项目管理相关的文档。
 
 - **planning/** - 项目规划
+  - [第二阶段开发计划](project-management/planning/phase-2-planning.md) - 核心功能开发计划
   - 项目计划
   - 里程碑定义
   - 资源分配
   - 风险评估
 
 - **progress/** - 进度报告
+  - [2025-06-24进度报告](project-management/progress/2025-06-24-progress-report.md) - 最新项目进度
   - 周报/月报
   - 任务完成情况
   - 问题跟踪
@@ -135,6 +137,8 @@
 - [系统需求文档](requirements/个人读书记录系统需求文档.md) - 完整的系统需求说明
 - [API端点文档](design/api/api-endpoints.md) - 所有API端点的详细说明
 - [API开发规范](development/coding-standards/api-development-guide.md) - API开发标准和最佳实践
+- [最新进度报告](project-management/progress/2025-06-24-progress-report.md) - 项目当前状态（25%完成）
+- [第二阶段计划](project-management/planning/phase-2-planning.md) - 核心功能开发计划
 
 ### 常用文档
 - [项目规划](project-management/planning/) - 项目计划和里程碑
