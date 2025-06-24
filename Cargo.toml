@@ -41,6 +41,10 @@ validator = { version = "0.18", features = ["derive"] }
 # UUID for unique identifiers
 uuid = { version = "1.10", features = ["v4", "v7", "serde"] }
 
+# OpenAPI/Swagger documentation
+utoipa = { version = "4.2", features = ["actix_extras", "chrono", "uuid"] }
+utoipa-swagger-ui = { version = "6.0", features = ["actix-web"] }
+
 [dev-dependencies]
 actix-rt = "2.10"
 tokio-test = "0.4"

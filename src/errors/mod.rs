@@ -5,6 +5,7 @@
 use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use serde::Serialize;
 use thiserror::Error;
+use utoipa::ToSchema;
 
 /// Main application error type
 /// 
@@ -35,15 +36,21 @@ pub enum AppError {
     /// Environment variable error
     #[error("Environment variable error: {0}")]
     EnvVarError(#[from] std::env::VarError),
+    
+    /// JSON serialization/deserialization error
+    #[error("JSON error: {0}")]
+    JsonError(#[from] serde_json::Error),
 }
 
 /// Error response structure sent to clients
-#[derive(Serialize)]
-struct ErrorResponse {
+#[derive(Serialize, ToSchema)]
+pub struct ErrorResponse {
     /// Error type/code for client handling
-    error: String,
+    #[schema(example = "VALIDATION_ERROR")]
+    pub error: String,
     /// Human-readable error message
-    message: String,
+    #[schema(example = "Title is required")]
+    pub message: String,
 }
 
 impl ResponseError for AppError {
@@ -67,6 +74,7 @@ impl ResponseError for AppError {
             AppError::ValidationError(_) => StatusCode::UNPROCESSABLE_ENTITY,
             AppError::DatabaseError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::EnvVarError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::JsonError(_) => StatusCode::BAD_REQUEST,
         }
     }
 }
@@ -81,7 +89,15 @@ impl AppError {
             AppError::ValidationError(_) => "VALIDATION_ERROR",
             AppError::DatabaseError(_) => "DATABASE_ERROR",
             AppError::EnvVarError(_) => "CONFIGURATION_ERROR",
+            AppError::JsonError(_) => "JSON_ERROR",
         }.to_string()
+    }
+}
+
+/// Convert actix-web JSON payload errors to our AppError
+impl From<actix_web::error::JsonPayloadError> for AppError {
+    fn from(err: actix_web::error::JsonPayloadError) -> Self {
+        AppError::BadRequest(format!("Invalid JSON: {}", err))
     }
 }
 

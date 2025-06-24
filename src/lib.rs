@@ -17,6 +17,49 @@ pub use db::{DbPool, establish_connection};
 
 use actix_web::{web, App};
 use actix_cors::Cors;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
+
+/// OpenAPI documentation configuration
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        handlers::books::create_book,
+        handlers::books::get_book,
+        handlers::books::list_books,
+        handlers::books::update_book,
+        handlers::books::delete_book,
+    ),
+    components(
+        schemas(
+            models::book::CreateBookRequest,
+            models::book::BookResponse,
+            models::book::BookListResponse,
+            models::book::UpdateBook,
+            errors::ErrorResponse,
+        )
+    ),
+    tags(
+        (name = "Books", description = "Book management operations")
+    ),
+    info(
+        title = "Personal Reading Notes API",
+        description = "API for managing personal reading notes, books, and reading progress",
+        version = "1.0.0",
+        contact(
+            name = "API Support",
+            email = "support@example.com"
+        ),
+        license(
+            name = "MIT",
+            url = "https://opensource.org/licenses/MIT"
+        )
+    ),
+    servers(
+        (url = "http://localhost:8080", description = "Local development server")
+    )
+)]
+pub struct ApiDoc;
 
 /// Creates and configures the Actix-web application
 /// 
@@ -39,6 +82,11 @@ pub fn create_app(pool: DbPool) -> App<impl actix_web::dev::ServiceFactory<
         .app_data(web::Data::new(pool))
         // Apply CORS middleware
         .wrap(cors)
+        // Add Swagger UI
+        .service(
+            SwaggerUi::new("/docs/{_:.*}")
+                .url("/api-docs/openapi.json", ApiDoc::openapi())
+        )
         // Configure API routes
         .service(configure_api_routes())
 }
@@ -65,9 +113,20 @@ fn configure_api_routes() -> actix_web::Scope {
     web::scope("/api")
         // Health check endpoint
         .route("/health", web::get().to(handlers::health_check))
-        // TODO: Add book management routes
+        // Book management routes
+        .service(configure_book_routes())
         // TODO: Add reading notes routes
         // TODO: Add category routes
         // TODO: Add tag routes
         // TODO: Add reading status routes
+}
+
+/// Configures book management routes
+fn configure_book_routes() -> actix_web::Scope {
+    web::scope("/books")
+        .route("", web::post().to(handlers::books::create_book))
+        .route("", web::get().to(handlers::books::list_books))
+        .route("/{id}", web::get().to(handlers::books::get_book))
+        .route("/{id}", web::put().to(handlers::books::update_book))
+        .route("/{id}", web::delete().to(handlers::books::delete_book))
 }

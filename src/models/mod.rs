@@ -4,7 +4,7 @@ pub mod tag;
 pub mod note;
 pub mod reading_status;
 
-pub use book::{Book, NewBook, UpdateBook};
+pub use book::{Book, NewBook, UpdateBook, CreateBookRequest, BookResponse, BookListResponse};
 pub use category::{Category, NewCategory};
 pub use tag::{Tag, NewTag};
 pub use note::{ReadingNote, NewNote, UpdateNote};
