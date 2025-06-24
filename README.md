@@ -43,19 +43,22 @@
 
 ## 📚 文档目录
 
-### 开发文档
-- [API 开发规范指南](./API_DEVELOPMENT_GUIDE.md) - 详细的 API 开发标准和最佳实践
-- [API 快速参考](./API_QUICK_REFERENCE.md) - 开发时的快速查阅手册
-- [API 文档](./API.md) - 所有 API 端点的详细说明
-- [Swagger 使用指南](./SWAGGER.md) - 交互式 API 文档使用说明
+### API 文档
+- [API 端点文档](./docs/design/api/api-endpoints.md) - 所有 API 端点的详细说明
+- [API 快速参考](./docs/design/api/api-quick-reference.md) - 开发时的快速查阅手册
+- [Swagger 使用指南](./docs/design/api/swagger-guide.md) - 交互式 API 文档使用说明
 
-### 项目文档
-- [需求文档](./docs/requirements/个人读书记录系统需求文档.md) - 系统需求说明
-- [数据库设计](./docs/design/database/数据库设计文档.md) - 数据库架构设计
+### 开发文档
+- [API 开发规范](./docs/development/coding-standards/api-development-guide.md) - 详细的 API 开发标准和最佳实践
 - [后端开发计划](./docs/development/backend-development-plan.md) - 开发路线图
+
+### 设计文档
+- [数据库设计](./docs/design/database/数据库设计文档.md) - 数据库架构设计
+- [需求文档](./docs/requirements/个人读书记录系统需求文档.md) - 系统需求说明
 
 ### 其他文档
 - [CLAUDE.md](./CLAUDE.md) - Claude Code AI 助手配置
+- [文档索引](./docs/README.md) - 完整的文档目录
 
 ## 🛠️ 技术栈
 
@@ -118,8 +121,8 @@ cargo check
 ```
 
 ### 新增 API 端点
-1. 参考 [API 开发规范指南](./API_DEVELOPMENT_GUIDE.md)
-2. 使用 [API 快速参考](./API_QUICK_REFERENCE.md) 获取代码模板
+1. 参考 [API 开发规范](./docs/development/coding-standards/api-development-guide.md)
+2. 使用 [API 快速参考](./docs/design/api/api-quick-reference.md) 获取代码模板
 3. 查看 `src/handlers/books.rs` 作为示例
 
 ### 项目结构

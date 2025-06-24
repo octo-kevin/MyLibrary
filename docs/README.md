@@ -33,9 +33,10 @@
   - 部署架构图
 
 - **api/** - API文档
+  - [API端点文档](design/api/api-endpoints.md) - 所有API端点的详细说明
+  - [API快速参考](design/api/api-quick-reference.md) - 开发时的快速查阅手册
+  - [Swagger使用指南](design/api/swagger-guide.md) - 交互式API文档使用说明
   - RESTful API规范
-  - 接口详细说明
-  - 请求响应示例
   - API版本管理
 
 - **database/** - 数据库设计文档
@@ -54,6 +55,7 @@
 包含开发相关的技术文档和规范。
 
 - **coding-standards/** - 编码规范
+  - [API开发规范](development/coding-standards/api-development-guide.md) - 详细的API开发标准和最佳实践
   - Rust编码规范
   - 前端编码规范
   - 代码审查标准
@@ -130,12 +132,15 @@
 ## 快速导航
 
 ### 最新文档
-- [系统需求文档](requirements/图书管理系统需求文档.md) - 完整的系统需求说明
+- [系统需求文档](requirements/个人读书记录系统需求文档.md) - 完整的系统需求说明
+- [API端点文档](design/api/api-endpoints.md) - 所有API端点的详细说明
+- [API开发规范](development/coding-standards/api-development-guide.md) - API开发标准和最佳实践
 
 ### 常用文档
 - [项目规划](project-management/planning/) - 项目计划和里程碑
 - [系统架构](design/architecture/) - 技术架构设计
-- [API文档](design/api/) - 接口规范说明
+- [API快速参考](design/api/api-quick-reference.md) - 开发时的快速查阅
+- [数据库设计](design/database/数据库设计文档.md) - 数据库架构设计
 - [部署指南](development/deployment/) - 系统部署说明
 
 ## 贡献指南
