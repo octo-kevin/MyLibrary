@@ -18,6 +18,9 @@ pub struct TagListQuery {
     /// Items per page (default: 20, max: 100)
     #[param(example = 20)]
     pub per_page: Option<u32>,
+    /// Search query for tag name
+    #[param(example = "programming")]
+    pub search: Option<String>,
 }
 
 /// Path parameters for tag operations
@@ -111,7 +114,7 @@ pub async fn list_tags(
     let page = query.page.unwrap_or(1).max(1);
     let per_page = query.per_page.unwrap_or(20).min(100).max(1);
 
-    let (tags, total) = Tag::list_paginated(&mut conn, page, per_page)?;
+    let (tags, total) = Tag::list_with_search(&mut conn, query.search.as_deref(), page, per_page)?;
     let total_pages = ((total as f64) / (per_page as f64)).ceil() as u32;
     
     let mut tag_responses = Vec::new();

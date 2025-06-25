@@ -291,6 +291,70 @@ impl ReadingNote {
         Ok((notes, total))
     }
 
+    /// Lists notes with optional search and note type filter
+    pub fn list_with_filters(
+        conn: &mut PgConnection,
+        search_query: Option<&str>,
+        note_type_filter: Option<&str>,
+        page: u32,
+        per_page: u32,
+    ) -> Result<(Vec<ReadingNote>, i64)> {
+        let offset = ((page.saturating_sub(1)) * per_page) as i64;
+        
+        // Prepare search pattern if needed
+        let search_pattern = search_query
+            .filter(|s| !s.trim().is_empty())
+            .map(|s| format!("%{}%", s.trim()));
+        
+        // Prepare note type filter if needed
+        let note_type = note_type_filter
+            .filter(|s| !s.trim().is_empty())
+            .map(|s| s.trim().to_string());
+        
+        let mut query = reading_notes::table
+            .filter(reading_notes::deleted_at.is_null())
+            .into_boxed();
+
+        // Apply search filter if provided
+        if let Some(ref pattern) = search_pattern {
+            query = query.filter(
+                reading_notes::title.ilike(pattern)
+                    .or(reading_notes::content.ilike(pattern))
+            );
+        }
+
+        // Apply note type filter if provided
+        if let Some(ref note_type_val) = note_type {
+            query = query.filter(reading_notes::note_type.eq(note_type_val));
+        }
+
+        let notes = query
+            .order(reading_notes::created_at.desc())
+            .limit(per_page as i64)
+            .offset(offset)
+            .load::<ReadingNote>(conn)?;
+
+        // Get total count with the same filters
+        let mut count_query = reading_notes::table
+            .filter(reading_notes::deleted_at.is_null())
+            .into_boxed();
+
+        if let Some(ref pattern) = search_pattern {
+            count_query = count_query.filter(
+                reading_notes::title.ilike(pattern)
+                    .or(reading_notes::content.ilike(pattern))
+            );
+        }
+
+        if let Some(ref note_type_val) = note_type {
+            count_query = count_query.filter(reading_notes::note_type.eq(note_type_val));
+        }
+
+        let total = count_query.count().get_result::<i64>(conn)?;
+
+        Ok((notes, total))
+    }
+
     /// Updates a note
     pub fn update(
         conn: &mut PgConnection,

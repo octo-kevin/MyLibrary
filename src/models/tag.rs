@@ -202,6 +202,49 @@ impl Tag {
         Ok((tags, total))
     }
 
+    /// Lists tags with optional search filter
+    pub fn list_with_search(
+        conn: &mut PgConnection,
+        search_query: Option<&str>,
+        page: u32,
+        per_page: u32,
+    ) -> Result<(Vec<Tag>, i64)> {
+        let offset = ((page.saturating_sub(1)) * per_page) as i64;
+        
+        // Prepare search pattern if needed
+        let search_pattern = search_query
+            .filter(|s| !s.trim().is_empty())
+            .map(|s| format!("%{}%", s.trim()));
+        
+        let mut query = tags::table
+            .filter(tags::deleted_at.is_null())
+            .into_boxed();
+
+        // Apply search filter if provided
+        if let Some(ref pattern) = search_pattern {
+            query = query.filter(tags::name.ilike(pattern));
+        }
+
+        let tags = query
+            .order(tags::name.asc())
+            .limit(per_page as i64)
+            .offset(offset)
+            .load::<Tag>(conn)?;
+
+        // Get total count with the same search filter
+        let mut count_query = tags::table
+            .filter(tags::deleted_at.is_null())
+            .into_boxed();
+
+        if let Some(ref pattern) = search_pattern {
+            count_query = count_query.filter(tags::name.ilike(pattern));
+        }
+
+        let total = count_query.count().get_result::<i64>(conn)?;
+
+        Ok((tags, total))
+    }
+
     /// Gets popular tags sorted by usage count
     pub fn get_popular(conn: &mut PgConnection, limit: i64) -> Result<Vec<PopularTagResponse>> {
         let popular_tags = tags::table

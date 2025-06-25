@@ -21,6 +21,9 @@ pub struct NoteListQuery {
     /// Search query for title/content
     #[param(example = "important")]
     pub search: Option<String>,
+    /// Filter by note type (quote, summary, thought, general)
+    #[param(example = "quote")]
+    pub note_type: Option<String>,
 }
 
 /// Path parameters for note operations
@@ -122,15 +125,13 @@ pub async fn list_notes(
     let page = query.page.unwrap_or(1).max(1);
     let per_page = query.per_page.unwrap_or(20).min(100).max(1);
 
-    let (notes, total) = if let Some(ref search_query) = query.search {
-        if search_query.trim().is_empty() {
-            ReadingNote::list_paginated(&mut conn, page, per_page)?
-        } else {
-            ReadingNote::search(&mut conn, search_query.trim(), page, per_page)?
-        }
-    } else {
-        ReadingNote::list_paginated(&mut conn, page, per_page)?
-    };
+    let (notes, total) = ReadingNote::list_with_filters(
+        &mut conn,
+        query.search.as_deref(),
+        query.note_type.as_deref(),
+        page,
+        per_page,
+    )?;
 
     let total_pages = ((total as f64) / (per_page as f64)).ceil() as u32;
     let mut note_responses = Vec::new();
