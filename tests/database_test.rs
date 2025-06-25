@@ -183,7 +183,7 @@ async fn test_notes_operations() {
         .expect("Failed to insert book");
     
     // Create a note
-    let new_note = NewNote {
+    let new_note = NewReadingNote {
         book_id: book.id,
         title: Some("Chapter 1 Notes".to_string()),
         content: "This is a test note with **markdown** formatting.".to_string(),
