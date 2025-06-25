@@ -1,264 +1,551 @@
-# 个人读书记录系统 API 文档
+# API Endpoints Reference
 
-## 概述
+> **Document Info**  
+> Version: v2.0  
+> Last Updated: 2025-06-25  
+> Author: Development Team  
+> Status: Production Ready
 
-本文档描述了个人读书记录系统的RESTful API端点。API基于JSON格式，支持标准的HTTP方法。
+## 📋 Table of Contents
 
-## 基础信息
+- [API Overview](#api-overview)
+- [Books API](#books-api)
+- [Notes API](#notes-api)
+- [Tags API](#tags-api)
+- [Response Formats](#response-formats)
+- [Error Handling](#error-handling)
+- [Pagination](#pagination)
 
+## 🔗 API Overview
+
+### Base Information
 - **Base URL**: `http://localhost:8080/api`
 - **Content-Type**: `application/json`
-- **响应格式**: JSON
+- **Response Format**: JSON
+- **Authentication**: None (single-user system)
+- **API Version**: v1
+- **Total Endpoints**: 19
 
-## 书籍管理 API
+### HTTP Status Codes
+- `200 OK` - Successful GET, PUT requests
+- `201 Created` - Successful POST requests
+- `204 No Content` - Successful DELETE requests
+- `400 Bad Request` - Invalid request data
+- `404 Not Found` - Resource not found
+- `500 Internal Server Error` - Server error
 
-### 1. 创建书籍
+## 📚 Books API
 
-**请求**
-```
-POST /api/books
-Content-Type: application/json
+### 1. Create Book
+Creates a new book record.
 
+**Endpoint**: `POST /api/books`
+
+**Request Body**:
+```json
 {
-  "isbn": "978-0134685991",           // 可选，ISBN号
-  "title": "Effective Java",          // 必填，书名
-  "author": "Joshua Bloch",           // 必填，作者
-  "publisher": "Addison-Wesley",      // 可选，出版社
-  "publication_date": "2017-12-27",   // 可选，出版日期 (YYYY-MM-DD)
-  "page_count": 416,                  // 可选，页数
-  "cover_image": "http://...",        // 可选，封面图片URL
-  "description": "Best practices..."  // 可选，描述
+  "title": "The Rust Programming Language",
+  "author": "Steve Klabnik",
+  "isbn": "978-1593278281",
+  "publisher": "No Starch Press",
+  "page_count": 552,
+  "description": "The official guide to Rust programming"
 }
 ```
 
-**响应**
+**Response** (201 Created):
 ```json
 {
   "id": 1,
-  "isbn": "978-0134685991",
-  "title": "Effective Java",
-  "author": "Joshua Bloch",
-  "publisher": "Addison-Wesley",
-  "publication_date": "2017-12-27",
-  "page_count": 416,
-  "cover_image": "http://...",
-  "description": "Best practices for the Java platform",
-  "created_at": "2024-01-01T12:00:00Z",
-  "updated_at": "2024-01-01T12:00:00Z"
+  "title": "The Rust Programming Language",
+  "author": "Steve Klabnik", 
+  "isbn": "978-1593278281",
+  "publisher": "No Starch Press",
+  "page_count": 552,
+  "description": "The official guide to Rust programming",
+  "created_at": "2025-01-01T12:00:00Z",
+  "updated_at": "2025-01-01T12:00:00Z"
 }
 ```
 
-**状态码**
-- `201 Created`: 创建成功
-- `422 Unprocessable Entity`: 验证失败
+### 2. Get Books List
+Retrieves a paginated list of books with optional search.
 
-### 2. 获取书籍详情
+**Endpoint**: `GET /api/books`
 
-**请求**
+**Query Parameters**:
+- `page` (integer, optional): Page number (default: 1)
+- `per_page` (integer, optional): Items per page (default: 20, max: 100)
+- `search` (string, optional): Search in title and author
+
+**Example Request**:
 ```
-GET /api/books/{id}
-```
-
-**响应**
-```json
-{
-  "id": 1,
-  "isbn": "978-0134685991",
-  "title": "Effective Java",
-  "author": "Joshua Bloch",
-  "publisher": "Addison-Wesley",
-  "publication_date": "2017-12-27",
-  "page_count": 416,
-  "cover_image": "http://...",
-  "description": "Best practices for the Java platform",
-  "created_at": "2024-01-01T12:00:00Z",
-  "updated_at": "2024-01-01T12:00:00Z"
-}
+GET /api/books?page=1&per_page=10&search=rust
 ```
 
-**状态码**
-- `200 OK`: 获取成功
-- `404 Not Found`: 书籍不存在
-
-### 3. 获取书籍列表
-
-**请求**
-```
-GET /api/books?page=1&per_page=20&search=java
-```
-
-**查询参数**
-- `page`: 页码（默认: 1）
-- `per_page`: 每页数量（默认: 20，最大: 100）
-- `search`: 搜索关键词（搜索标题和作者）
-
-**响应**
+**Response** (200 OK):
 ```json
 {
   "books": [
     {
       "id": 1,
-      "isbn": "978-0134685991",
-      "title": "Effective Java",
-      "author": "Joshua Bloch",
-      "publisher": "Addison-Wesley",
-      "publication_date": "2017-12-27",
-      "page_count": 416,
-      "cover_image": "http://...",
-      "description": "Best practices for the Java platform",
-      "created_at": "2024-01-01T12:00:00Z",
-      "updated_at": "2024-01-01T12:00:00Z"
+      "title": "The Rust Programming Language",
+      "author": "Steve Klabnik",
+      "isbn": "978-1593278281", 
+      "publisher": "No Starch Press",
+      "page_count": 552,
+      "description": "The official guide to Rust programming",
+      "created_at": "2025-01-01T12:00:00Z",
+      "updated_at": "2025-01-01T12:00:00Z"
     }
   ],
-  "total": 1,
+  "total": 50,
   "page": 1,
-  "per_page": 20,
-  "total_pages": 1
+  "per_page": 10,
+  "total_pages": 5
 }
 ```
 
-**状态码**
-- `200 OK`: 获取成功
+### 3. Get Book Details
+Retrieves detailed information for a specific book.
 
-### 4. 更新书籍
+**Endpoint**: `GET /api/books/{id}`
 
-**请求**
-```
-PUT /api/books/{id}
-Content-Type: application/json
-
-{
-  "title": "Updated Title",        // 可选，更新标题
-  "description": "New description" // 可选，更新描述
-  // 只需要包含要更新的字段
-}
-```
-
-**响应**
+**Response** (200 OK):
 ```json
 {
   "id": 1,
-  "isbn": "978-0134685991",
-  "title": "Updated Title",
-  "author": "Joshua Bloch",
-  "publisher": "Addison-Wesley",
-  "publication_date": "2017-12-27",
-  "page_count": 416,
-  "cover_image": "http://...",
-  "description": "New description",
-  "created_at": "2024-01-01T12:00:00Z",
-  "updated_at": "2024-01-01T13:00:00Z"
+  "title": "The Rust Programming Language",
+  "author": "Steve Klabnik",
+  "isbn": "978-1593278281",
+  "publisher": "No Starch Press", 
+  "page_count": 552,
+  "description": "The official guide to Rust programming",
+  "created_at": "2025-01-01T12:00:00Z",
+  "updated_at": "2025-01-01T12:00:00Z"
 }
 ```
 
-**状态码**
-- `200 OK`: 更新成功
-- `404 Not Found`: 书籍不存在
-- `422 Unprocessable Entity`: 验证失败
+### 4. Update Book
+Updates an existing book record.
 
-### 5. 删除书籍（软删除）
+**Endpoint**: `PUT /api/books/{id}`
 
-**请求**
-```
-DELETE /api/books/{id}
-```
-
-**响应**
-无响应体
-
-**状态码**
-- `204 No Content`: 删除成功
-- `404 Not Found`: 书籍不存在
-
-## 通用API
-
-### 健康检查
-
-**请求**
-```
-GET /api/health
-```
-
-**响应**
+**Request Body** (partial updates allowed):
 ```json
 {
-  "status": "ok",
-  "version": "0.1.0"
+  "title": "Updated Book Title",
+  "description": "Updated description"
 }
 ```
 
-## 错误响应格式
+**Response** (200 OK): Updated book object
 
-所有错误响应都遵循统一格式：
+### 5. Delete Book
+Soft deletes a book record.
 
+**Endpoint**: `DELETE /api/books/{id}`
+
+**Response** (204 No Content): Empty body
+
+### 6. Get Book Notes
+Retrieves all notes associated with a specific book.
+
+**Endpoint**: `GET /api/books/{id}/notes`
+
+**Query Parameters**:
+- `page` (integer, optional): Page number (default: 1)
+- `per_page` (integer, optional): Items per page (default: 20)
+
+**Response** (200 OK):
 ```json
 {
-  "error": "ERROR_TYPE",
-  "message": "Human readable error message"
+  "notes": [
+    {
+      "id": 1,
+      "title": "Chapter 1 Summary",
+      "content": "Rust is a systems programming language...",
+      "note_type": "summary",
+      "page_reference": 15,
+      "is_favorite": false,
+      "tags": ["programming", "rust"],
+      "created_at": "2025-01-02T10:00:00Z",
+      "updated_at": "2025-01-02T10:00:00Z"
+    }
+  ],
+  "total": 25,
+  "page": 1,
+  "per_page": 20,
+  "total_pages": 2
 }
 ```
 
-**错误类型**
-- `VALIDATION_ERROR`: 输入验证失败（如必填字段为空）
-- `NOT_FOUND`: 资源不存在（如书籍ID不存在）
-- `BAD_REQUEST`: 请求格式错误（如无效参数）
-- `JSON_ERROR`: JSON格式错误（如语法错误）
-- `DATABASE_ERROR`: 数据库操作失败（如连接失败）
-- `INTERNAL_ERROR`: 服务器内部错误（如未预期的程序错误）
-- `CONFIGURATION_ERROR`: 配置错误（如环境变量缺失）
+## 📝 Notes API
 
-**特殊说明**
-- JSON解析错误由框架处理，错误格式可能略有不同
-- 路径参数验证由框架自动处理（如非数字的book ID）
+### 1. Create Note
+Creates a new reading note.
 
-## 使用示例
+**Endpoint**: `POST /api/notes`
 
-### 创建并获取书籍
-```bash
-# 创建书籍
-curl -X POST http://localhost:8080/api/books \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Clean Code",
-    "author": "Robert C. Martin",
-    "isbn": "978-0132350884",
-    "publisher": "Prentice Hall"
-  }'
-
-# 获取书籍列表
-curl http://localhost:8080/api/books
-
-# 搜索书籍
-curl "http://localhost:8080/api/books?search=clean&page=1&per_page=10"
-
-# 获取特定书籍
-curl http://localhost:8080/api/books/1
-
-# 更新书籍
-curl -X PUT http://localhost:8080/api/books/1 \
-  -H "Content-Type: application/json" \
-  -d '{"description": "A handbook of agile software craftsmanship"}'
-
-# 删除书籍
-curl -X DELETE http://localhost:8080/api/books/1
+**Request Body**:
+```json
+{
+  "title": "Chapter 1 Summary",
+  "content": "Rust is a systems programming language focused on safety...",
+  "note_type": "summary",
+  "book_id": 1,
+  "page_reference": 15,
+  "is_favorite": false,
+  "tags": ["programming", "rust", "systems"]
+}
 ```
 
-## 数据验证规则
+**Note Types**:
+- `quote` - Direct quotations from the book
+- `summary` - Chapter or section summaries
+- `thought` - Personal thoughts and reflections
+- `general` - General notes
 
-### 书籍字段验证
-- `title`: 必填，不能为空字符串
-- `author`: 必填，不能为空字符串
-- `isbn`: 可选，建议使用标准ISBN格式
-- `page_count`: 可选，必须为正整数
-- `publication_date`: 可选，格式为YYYY-MM-DD
+**Response** (201 Created):
+```json
+{
+  "id": 1,
+  "title": "Chapter 1 Summary", 
+  "content": "Rust is a systems programming language focused on safety...",
+  "note_type": "summary",
+  "book_id": 1,
+  "page_reference": 15,
+  "is_favorite": false,
+  "tags": ["programming", "rust", "systems"],
+  "book": {
+    "id": 1,
+    "title": "The Rust Programming Language",
+    "author": "Steve Klabnik"
+  },
+  "created_at": "2025-01-02T10:00:00Z",
+  "updated_at": "2025-01-02T10:00:00Z"
+}
+```
 
-### 分页参数验证
-- `page`: 最小值为1
-- `per_page`: 范围为1-100
+### 2. Get Notes List
+Retrieves a paginated list of notes with filtering options.
 
-## 注意事项
+**Endpoint**: `GET /api/notes`
 
-1. **软删除**: 删除操作使用软删除，数据在数据库中保留但标记为已删除
-2. **分页**: 所有列表接口都支持分页，建议使用合理的页面大小
-3. **搜索**: 搜索功能支持模糊匹配，不区分大小写
-4. **时间格式**: 所有时间字段使用ISO 8601格式（UTC时间）
+**Query Parameters**:
+- `page` (integer, optional): Page number (default: 1)
+- `per_page` (integer, optional): Items per page (default: 20)
+- `search` (string, optional): Search in title and content
+- `note_type` (string, optional): Filter by note type
+- `book_id` (integer, optional): Filter by book ID
+
+**Example Request**:
+```
+GET /api/notes?page=1&per_page=10&search=rust&note_type=summary
+```
+
+**Response** (200 OK):
+```json
+{
+  "notes": [
+    {
+      "id": 1,
+      "title": "Chapter 1 Summary",
+      "content": "Rust is a systems programming language...",
+      "note_type": "summary", 
+      "page_reference": 15,
+      "is_favorite": false,
+      "tags": ["programming", "rust"],
+      "book": {
+        "id": 1,
+        "title": "The Rust Programming Language",
+        "author": "Steve Klabnik"
+      },
+      "created_at": "2025-01-02T10:00:00Z",
+      "updated_at": "2025-01-02T10:00:00Z"
+    }
+  ],
+  "total": 120,
+  "page": 1,
+  "per_page": 10,
+  "total_pages": 12
+}
+```
+
+### 3. Get Note Details
+Retrieves detailed information for a specific note.
+
+**Endpoint**: `GET /api/notes/{id}`
+
+**Response** (200 OK): Single note object with full details
+
+### 4. Update Note
+Updates an existing note.
+
+**Endpoint**: `PUT /api/notes/{id}`
+
+**Request Body** (partial updates allowed):
+```json
+{
+  "title": "Updated Note Title",
+  "content": "Updated note content...",
+  "is_favorite": true
+}
+```
+
+**Response** (200 OK): Updated note object
+
+### 5. Delete Note  
+Soft deletes a note record.
+
+**Endpoint**: `DELETE /api/notes/{id}`
+
+**Response** (204 No Content): Empty body
+
+### 6. Update Note Tags
+Updates the tags associated with a note.
+
+**Endpoint**: `PUT /api/notes/{id}/tags`
+
+**Request Body**:
+```json
+{
+  "tags": ["programming", "rust", "systems", "new-tag"]
+}
+```
+
+**Response** (200 OK): Updated note object with new tags
+
+## 🏷️ Tags API
+
+### 1. Create Tag
+Creates a new tag.
+
+**Endpoint**: `POST /api/tags`
+
+**Request Body**:
+```json
+{
+  "name": "Programming",
+  "description": "Notes about programming concepts"
+}
+```
+
+**Response** (201 Created):
+```json
+{
+  "id": 1,
+  "name": "Programming", 
+  "slug": "programming",
+  "description": "Notes about programming concepts",
+  "usage_count": 0,
+  "created_at": "2025-01-01T12:00:00Z",
+  "updated_at": "2025-01-01T12:00:00Z"
+}
+```
+
+### 2. Get Tags List
+Retrieves a paginated list of tags with optional search.
+
+**Endpoint**: `GET /api/tags`
+
+**Query Parameters**:
+- `page` (integer, optional): Page number (default: 1)
+- `per_page` (integer, optional): Items per page (default: 20)
+- `search` (string, optional): Search in tag names
+
+**Example Request**:
+```
+GET /api/tags?page=1&per_page=10&search=prog
+```
+
+**Response** (200 OK):
+```json
+{
+  "tags": [
+    {
+      "id": 1,
+      "name": "Programming",
+      "slug": "programming", 
+      "description": "Notes about programming concepts",
+      "usage_count": 15,
+      "created_at": "2025-01-01T12:00:00Z",
+      "updated_at": "2025-01-01T12:00:00Z"
+    }
+  ],
+  "total": 25,
+  "page": 1,
+  "per_page": 10,
+  "total_pages": 3
+}
+```
+
+### 3. Get Tag Details
+Retrieves detailed information for a specific tag.
+
+**Endpoint**: `GET /api/tags/{id}`
+
+**Response** (200 OK): Single tag object with usage statistics
+
+### 4. Update Tag
+Updates an existing tag.
+
+**Endpoint**: `PUT /api/tags/{id}`
+
+**Request Body**:
+```json
+{
+  "name": "Updated Tag Name",
+  "description": "Updated description"
+}
+```
+
+**Response** (200 OK): Updated tag object
+
+### 5. Delete Tag
+Soft deletes a tag record.
+
+**Endpoint**: `DELETE /api/tags/{id}`
+
+**Response** (204 No Content): Empty body
+
+### 6. Get Popular Tags
+Retrieves tags ordered by usage count.
+
+**Endpoint**: `GET /api/tags/popular`
+
+**Query Parameters**:
+- `limit` (integer, optional): Number of tags to return (default: 10, max: 50)
+
+**Response** (200 OK):
+```json
+{
+  "tags": [
+    {
+      "id": 1,
+      "name": "Programming",
+      "slug": "programming",
+      "description": "Notes about programming concepts", 
+      "usage_count": 25,
+      "created_at": "2025-01-01T12:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Rust",
+      "slug": "rust",
+      "description": "Rust programming language",
+      "usage_count": 18,
+      "created_at": "2025-01-01T12:00:00Z"
+    }
+  ]
+}
+```
+
+## 📊 Response Formats
+
+### Success Response Structure
+All successful responses follow consistent patterns:
+
+**Single Resource**:
+```json
+{
+  "id": 1,
+  "field1": "value1",
+  "field2": "value2",
+  // ... other fields
+  "created_at": "2025-01-01T12:00:00Z",
+  "updated_at": "2025-01-01T12:00:00Z"
+}
+```
+
+**Collection Response**:
+```json
+{
+  "items": [...],           // Array of resources
+  "total": 100,            // Total number of items
+  "page": 1,               // Current page number
+  "per_page": 20,          // Items per page
+  "total_pages": 5         // Total number of pages
+}
+```
+
+### Timestamp Format
+All timestamps use ISO 8601 format with UTC timezone:
+```
+"created_at": "2025-01-01T12:00:00Z"
+"updated_at": "2025-01-01T12:00:00Z"
+```
+
+## ❌ Error Handling
+
+### Error Response Format
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid request data",
+    "details": {
+      "field": "title",
+      "message": "Title is required"
+    }
+  }
+}
+```
+
+### Common Error Codes
+- `VALIDATION_ERROR` - Request validation failed
+- `NOT_FOUND` - Resource not found  
+- `DUPLICATE_RESOURCE` - Resource already exists
+- `INTERNAL_ERROR` - Server error
+
+### Field Validation Errors
+- **Books**: Title and author are required
+- **Notes**: Content is required, note_type must be valid enum
+- **Tags**: Name is required, must be unique
+
+## 📄 Pagination
+
+### Pagination Parameters
+- `page`: Page number (starts from 1)
+- `per_page`: Items per page (default: 20, max: 100)
+
+### Pagination Response
+```json
+{
+  "total": 150,           // Total items available
+  "page": 2,              // Current page
+  "per_page": 20,         // Items per page  
+  "total_pages": 8        // Total pages available
+}
+```
+
+### Navigation Examples
+```
+First page:     GET /api/books?page=1&per_page=20
+Next page:      GET /api/books?page=2&per_page=20
+Large page:     GET /api/books?page=1&per_page=50
+```
+
+## 🔍 Search and Filtering
+
+### Search Capabilities
+- **Books**: Search in title and author fields
+- **Notes**: Search in title and content fields  
+- **Tags**: Search in name field
+
+### Filtering Options
+- **Notes**: Filter by `note_type`, `book_id`, `is_favorite`
+- **Tags**: Filter by usage count ranges
+
+### Example Search Queries
+```
+Search books:     GET /api/books?search=rust programming
+Search notes:     GET /api/notes?search=ownership&note_type=summary
+Search tags:      GET /api/tags?search=prog
+```
+
+---
+
+**API Version**: v1.0  
+**Next Review**: 2025-07-25  
+**Interactive Docs**: http://localhost:8080/docs
