@@ -29,6 +29,19 @@ use utoipa_swagger_ui::SwaggerUi;
         handlers::books::list_books,
         handlers::books::update_book,
         handlers::books::delete_book,
+        handlers::notes::create_note,
+        handlers::notes::get_note,
+        handlers::notes::list_notes,
+        handlers::notes::get_book_notes,
+        handlers::notes::update_note,
+        handlers::notes::update_note_tags,
+        handlers::notes::delete_note,
+        handlers::tags::create_tag,
+        handlers::tags::get_tag,
+        handlers::tags::list_tags,
+        handlers::tags::get_popular_tags,
+        handlers::tags::update_tag,
+        handlers::tags::delete_tag,
     ),
     components(
         schemas(
@@ -36,11 +49,23 @@ use utoipa_swagger_ui::SwaggerUi;
             models::book::BookResponse,
             models::book::BookListResponse,
             models::book::UpdateBook,
+            models::note::CreateNoteRequest,
+            models::note::NoteResponse,
+            models::note::NoteListResponse,
+            models::note::UpdateReadingNote,
+            models::note::NoteType,
+            models::tag::CreateTagRequest,
+            models::tag::TagResponse,
+            models::tag::TagListResponse,
+            models::tag::PopularTagResponse,
+            models::tag::UpdateTag,
             errors::ErrorResponse,
         )
     ),
     tags(
-        (name = "Books", description = "Book management operations")
+        (name = "Books", description = "Book management operations"),
+        (name = "Notes", description = "Reading note management operations"),
+        (name = "Tags", description = "Tag management operations")
     ),
     info(
         title = "Personal Reading Notes API",
@@ -115,9 +140,11 @@ fn configure_api_routes() -> actix_web::Scope {
         .route("/health", web::get().to(handlers::health_check))
         // Book management routes
         .service(configure_book_routes())
-        // TODO: Add reading notes routes
+        // Note management routes
+        .service(configure_note_routes())
+        // Tag management routes
+        .service(configure_tag_routes())
         // TODO: Add category routes
-        // TODO: Add tag routes
         // TODO: Add reading status routes
 }
 
@@ -129,4 +156,27 @@ fn configure_book_routes() -> actix_web::Scope {
         .route("/{id}", web::get().to(handlers::books::get_book))
         .route("/{id}", web::put().to(handlers::books::update_book))
         .route("/{id}", web::delete().to(handlers::books::delete_book))
+        .route("/{book_id}/notes", web::get().to(handlers::notes::get_book_notes))
+}
+
+/// Configures note management routes
+fn configure_note_routes() -> actix_web::Scope {
+    web::scope("/notes")
+        .route("", web::post().to(handlers::notes::create_note))
+        .route("", web::get().to(handlers::notes::list_notes))
+        .route("/{id}", web::get().to(handlers::notes::get_note))
+        .route("/{id}", web::put().to(handlers::notes::update_note))
+        .route("/{id}", web::delete().to(handlers::notes::delete_note))
+        .route("/{id}/tags", web::put().to(handlers::notes::update_note_tags))
+}
+
+/// Configures tag management routes
+fn configure_tag_routes() -> actix_web::Scope {
+    web::scope("/tags")
+        .route("", web::post().to(handlers::tags::create_tag))
+        .route("", web::get().to(handlers::tags::list_tags))
+        .route("/popular", web::get().to(handlers::tags::get_popular_tags))
+        .route("/{id}", web::get().to(handlers::tags::get_tag))
+        .route("/{id}", web::put().to(handlers::tags::update_tag))
+        .route("/{id}", web::delete().to(handlers::tags::delete_tag))
 }
