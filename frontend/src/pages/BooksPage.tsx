@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useDebounceSearch } from '../hooks/useDebounceSearch'
 import { 
   Button, 
   Input, 
@@ -48,6 +49,14 @@ export default function BooksPage() {
     setSearchQuery(value)
     setCurrentPage(1)
   }
+
+  const {
+    inputValue,
+    handleInputChange,
+    handleCompositionStart,
+    handleCompositionEnd,
+    clear
+  } = useDebounceSearch(handleSearch, 300)
 
   if (isLoading) {
     return <Loading size="large" text="加载书籍列表中..." />
@@ -181,8 +190,11 @@ export default function BooksPage() {
             placeholder="搜索书名或作者..."
             size="large"
             prefix={<SearchOutlined />}
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
+            value={inputValue}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={(e) => handleCompositionEnd(e.currentTarget.value)}
+            onClear={clear}
             style={{ maxWidth: 400 }}
             allowClear
           />

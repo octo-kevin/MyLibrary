@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useDebounceSearch } from '../hooks/useDebounceSearch'
 import { 
   Button, 
   Input, 
@@ -74,6 +75,14 @@ export default function TagsPage() {
     setSearchQuery(value)
     setCurrentPage(1)
   }
+
+  const {
+    inputValue,
+    handleInputChange,
+    handleCompositionStart,
+    handleCompositionEnd,
+    clear
+  } = useDebounceSearch(handleSearch, 300)
 
   const handleDeleteClick = (tag: { id: number; name: string }) => {
     Modal.confirm({
@@ -246,8 +255,11 @@ export default function TagsPage() {
               placeholder="搜索标签名称..."
               size="large"
               prefix={<SearchOutlined />}
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
+              value={inputValue}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onCompositionStart={handleCompositionStart}
+              onCompositionEnd={(e) => handleCompositionEnd(e.currentTarget.value)}
+              onClear={clear}
               style={{ maxWidth: 400 }}
               allowClear
             />

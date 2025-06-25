@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useDebounceSearch } from '../hooks/useDebounceSearch'
 import { 
   Button, 
   Input, 
@@ -63,6 +64,14 @@ export default function NotesPage() {
     setSearchQuery(value)
     setCurrentPage(1)
   }
+
+  const {
+    inputValue,
+    handleInputChange,
+    handleCompositionStart,
+    handleCompositionEnd,
+    clear
+  } = useDebounceSearch(handleSearch, 300)
 
   if (isLoading) {
     return <Loading size="large" text="加载笔记列表中..." />
@@ -129,8 +138,11 @@ export default function NotesPage() {
               placeholder="搜索笔记标题或内容..."
               size="large"
               prefix={<SearchOutlined />}
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
+              value={inputValue}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onCompositionStart={handleCompositionStart}
+              onCompositionEnd={(e) => handleCompositionEnd(e.currentTarget.value)}
+              onClear={clear}
               style={{ maxWidth: 500 }}
               allowClear
             />
