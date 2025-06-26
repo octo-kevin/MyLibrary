@@ -14,8 +14,7 @@ import {
   Row,
   Col,
   Badge,
-  Tooltip,
-  Avatar
+  Tooltip
 } from 'antd'
 import {
   PlusOutlined,

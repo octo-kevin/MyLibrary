@@ -33,6 +33,14 @@ import { PageHeader, Loading, ErrorMessage } from '../components/ui'
 
 const { Text } = Typography
 
+interface Tag {
+  id: number
+  name: string
+  slug: string
+  usage_count: number
+  created_at: string
+}
+
 export default function TagsPage() {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'all' | 'popular'>('all')
@@ -179,7 +187,7 @@ export default function TagsPage() {
       title: '操作',
       key: 'actions',
       width: '10%',
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: Tag) => (
         <Space>
           <Tooltip title="查看笔记">
             <Link to={`/notes?search=${record.name}`}>

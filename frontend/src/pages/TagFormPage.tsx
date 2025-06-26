@@ -61,7 +61,7 @@ export default function TagFormPage() {
       queryClient.invalidateQueries({ queryKey: ['tags'] })
       navigate('/tags')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Create error:', error)
       message.error('创建失败，请稍后重试')
     },
@@ -76,7 +76,7 @@ export default function TagFormPage() {
       queryClient.invalidateQueries({ queryKey: ['tag', tagId] })
       navigate('/tags')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Update error:', error)
       message.error('更新失败，请稍后重试')
     },

@@ -8,7 +8,6 @@ import {
   Table, 
   Card, 
   Space, 
-  Tag, 
   Typography,
   Pagination,
   Empty,
@@ -29,6 +28,17 @@ import { PageHeader, Loading, ErrorMessage } from '../components/ui'
 import { formatDate } from '../lib/utils'
 
 const { Text } = Typography
+
+interface Book {
+  id: number
+  title: string
+  author: string
+  description?: string
+  publisher?: string
+  pages?: number
+  isbn?: string
+  created_at: string
+}
 
 export default function BooksPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -83,7 +93,7 @@ export default function BooksPage() {
       dataIndex: 'title',
       key: 'title',
       width: '40%',
-      render: (title: string, record: any) => (
+      render: (title: string, record: Book) => (
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <Avatar 
             size={48}
@@ -154,7 +164,7 @@ export default function BooksPage() {
       title: '操作',
       key: 'actions',
       width: '10%',
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: Book) => (
         <Space>
           <Tooltip title="查看详情">
             <Link to={`/books/${record.id}`}>

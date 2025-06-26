@@ -7,9 +7,7 @@ import {
   Space, 
   Breadcrumb, 
   Descriptions, 
-  Tag,
-  Avatar,
-  Tooltip,
+  Tag
 } from 'antd'
 import {
   ArrowLeftOutlined,

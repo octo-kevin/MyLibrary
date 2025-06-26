@@ -10,8 +10,7 @@ import {
   Typography, 
   InputNumber,
   message,
-  Breadcrumb,
-  Spin
+  Breadcrumb
 } from 'antd'
 import {
   ArrowLeftOutlined,
@@ -71,7 +70,7 @@ export default function BookFormPage() {
       queryClient.invalidateQueries({ queryKey: ['books'] })
       navigate('/books')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Create error:', error)
       message.error('创建失败，请稍后重试')
     },
@@ -86,7 +85,7 @@ export default function BookFormPage() {
       queryClient.invalidateQueries({ queryKey: ['book', bookId] })
       navigate('/books')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Update error:', error)
       message.error('更新失败，请稍后重试')
     },

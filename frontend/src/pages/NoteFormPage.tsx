@@ -86,7 +86,7 @@ export default function NoteFormPage() {
       queryClient.invalidateQueries({ queryKey: ['notes'] })
       navigate('/notes')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Create error:', error)
       message.error('创建失败，请稍后重试')
     },
@@ -101,7 +101,7 @@ export default function NoteFormPage() {
       queryClient.invalidateQueries({ queryKey: ['note', noteId] })
       navigate('/notes')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Update error:', error)
       message.error('更新失败，请稍后重试')
     },
