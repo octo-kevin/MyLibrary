@@ -112,7 +112,7 @@ pub async fn list_tags(
     
     // Validate and set defaults for pagination
     let page = query.page.unwrap_or(1).max(1);
-    let per_page = query.per_page.unwrap_or(20).min(100).max(1);
+    let per_page = query.per_page.unwrap_or(20).clamp(1, 100);
 
     let (tags, total) = Tag::list_with_search(&mut conn, query.search.as_deref(), page, per_page)?;
     let total_pages = ((total as f64) / (per_page as f64)).ceil() as u32;
@@ -150,7 +150,7 @@ pub async fn get_popular_tags(
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
     
-    let limit = query.limit.unwrap_or(10).min(50).max(1);
+    let limit = query.limit.unwrap_or(10).clamp(1, 50);
     let popular_tags = Tag::get_popular(&mut conn, limit)?;
 
     Ok(HttpResponse::Ok().json(popular_tags))

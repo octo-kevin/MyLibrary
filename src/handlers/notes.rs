@@ -123,7 +123,7 @@ pub async fn list_notes(
     
     // Validate and set defaults for pagination
     let page = query.page.unwrap_or(1).max(1);
-    let per_page = query.per_page.unwrap_or(20).min(100).max(1);
+    let per_page = query.per_page.unwrap_or(20).clamp(1, 100);
 
     let (notes, total) = ReadingNote::list_with_filters(
         &mut conn,
@@ -176,7 +176,7 @@ pub async fn get_book_notes(
     
     // Get notes for the book
     let page = query.page.unwrap_or(1).max(1);
-    let per_page = query.per_page.unwrap_or(20).min(100).max(1);
+    let per_page = query.per_page.unwrap_or(20).clamp(1, 100);
     
     let (notes, total) = ReadingNote::find_by_book_id(&mut conn, path.book_id, page, per_page)?;
     let total_pages = ((total as f64) / (per_page as f64)).ceil() as u32;

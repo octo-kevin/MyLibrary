@@ -107,7 +107,7 @@ pub async fn list_books(
     
     // Validate and set defaults for pagination
     let page = query.page.unwrap_or(1).max(1);
-    let per_page = query.per_page.unwrap_or(20).min(100).max(1);
+    let per_page = query.per_page.unwrap_or(20).clamp(1, 100);
 
     let (books, total) = if let Some(ref search_query) = query.search {
         if search_query.trim().is_empty() {
