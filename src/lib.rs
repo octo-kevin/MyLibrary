@@ -1,5 +1,5 @@
 //! Personal Reading Notes Management System Backend
-//! 
+//!
 //! This library provides RESTful APIs for managing books, reading notes,
 //! categories, tags, and reading progress tracking.
 
@@ -13,11 +13,11 @@ pub mod models;
 pub mod utils;
 
 // Re-exports for convenience
-pub use db::{DbPool, establish_connection};
+pub use db::{establish_connection, DbPool};
 
-use actix_web::{web, App, HttpResponse};
 use actix_cors::Cors;
 use actix_files as fs;
+use actix_web::{web, App, HttpResponse};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -88,21 +88,25 @@ use utoipa_swagger_ui::SwaggerUi;
 pub struct ApiDoc;
 
 /// Creates and configures the Actix-web application
-/// 
+///
 /// # Arguments
 /// * `pool` - Database connection pool
-/// 
+///
 /// # Returns
 /// Configured Actix-web App instance with all routes and middleware
-pub fn create_app(pool: DbPool) -> App<impl actix_web::dev::ServiceFactory<
-    actix_web::dev::ServiceRequest,
-    Config = (),
-    Response = actix_web::dev::ServiceResponse<impl actix_web::body::MessageBody>,
-    Error = actix_web::Error,
-    InitError = (),
->> {
+pub fn create_app(
+    pool: DbPool,
+) -> App<
+    impl actix_web::dev::ServiceFactory<
+        actix_web::dev::ServiceRequest,
+        Config = (),
+        Response = actix_web::dev::ServiceResponse<impl actix_web::body::MessageBody>,
+        Error = actix_web::Error,
+        InitError = (),
+    >,
+> {
     let cors = configure_cors();
-    
+
     App::new()
         // Inject database pool into app data
         .app_data(web::Data::new(pool))
@@ -111,10 +115,7 @@ pub fn create_app(pool: DbPool) -> App<impl actix_web::dev::ServiceFactory<
         // Add health check endpoint
         .route("/health", web::get().to(health_check))
         // Add Swagger UI
-        .service(
-            SwaggerUi::new("/docs/{_:.*}")
-                .url("/api-docs/openapi.json", ApiDoc::openapi())
-        )
+        .service(SwaggerUi::new("/docs/{_:.*}").url("/api-docs/openapi.json", ApiDoc::openapi()))
         // Configure API routes
         .service(configure_api_routes())
         // Serve static files (frontend) - must be last
@@ -122,14 +123,14 @@ pub fn create_app(pool: DbPool) -> App<impl actix_web::dev::ServiceFactory<
 }
 
 /// Configures CORS settings for the application
-/// 
+///
 /// Allows requests from common frontend development servers
 /// and sets appropriate headers and methods
 fn configure_cors() -> Cors {
     Cors::default()
         // Allow common frontend development servers
-        .allowed_origin("http://localhost:3000")  // React default
-        .allowed_origin("http://localhost:5173")  // Vite default
+        .allowed_origin("http://localhost:3000") // React default
+        .allowed_origin("http://localhost:5173") // Vite default
         // Allow standard HTTP methods
         .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
         // Allow necessary headers
@@ -149,8 +150,8 @@ fn configure_api_routes() -> actix_web::Scope {
         .service(configure_note_routes())
         // Tag management routes
         .service(configure_tag_routes())
-        // TODO: Add category routes
-        // TODO: Add reading status routes
+    // TODO: Add category routes
+    // TODO: Add reading status routes
 }
 
 /// Configures book management routes
@@ -161,7 +162,10 @@ fn configure_book_routes() -> actix_web::Scope {
         .route("/{id}", web::get().to(handlers::books::get_book))
         .route("/{id}", web::put().to(handlers::books::update_book))
         .route("/{id}", web::delete().to(handlers::books::delete_book))
-        .route("/{book_id}/notes", web::get().to(handlers::notes::get_book_notes))
+        .route(
+            "/{book_id}/notes",
+            web::get().to(handlers::notes::get_book_notes),
+        )
 }
 
 /// Configures note management routes
@@ -172,7 +176,10 @@ fn configure_note_routes() -> actix_web::Scope {
         .route("/{id}", web::get().to(handlers::notes::get_note))
         .route("/{id}", web::put().to(handlers::notes::update_note))
         .route("/{id}", web::delete().to(handlers::notes::delete_note))
-        .route("/{id}/tags", web::put().to(handlers::notes::update_note_tags))
+        .route(
+            "/{id}/tags",
+            web::put().to(handlers::notes::update_note_tags),
+        )
 }
 
 /// Configures tag management routes

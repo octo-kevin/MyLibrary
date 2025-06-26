@@ -24,10 +24,13 @@ async fn test_validation_error_format() {
     // Assert
     assert_eq!(resp.status(), 422);
     let body: Value = test::read_body_json(resp).await;
-    
+
     // Check error format
     assert_eq!(body["error"], "VALIDATION_ERROR");
-    assert!(body["message"].as_str().unwrap().contains("Title is required"));
+    assert!(body["message"]
+        .as_str()
+        .unwrap()
+        .contains("Title is required"));
 }
 
 #[actix_web::test]
@@ -46,10 +49,13 @@ async fn test_not_found_error_format() {
     // Assert
     assert_eq!(resp.status(), 404);
     let body: Value = test::read_body_json(resp).await;
-    
+
     // Check error format
     assert_eq!(body["error"], "NOT_FOUND");
-    assert!(body["message"].as_str().unwrap().contains("Book with id 99999 not found"));
+    assert!(body["message"]
+        .as_str()
+        .unwrap()
+        .contains("Book with id 99999 not found"));
 }
 
 #[actix_web::test]
@@ -71,10 +77,13 @@ async fn test_update_not_found_error_format() {
     // Assert
     assert_eq!(resp.status(), 404);
     let body: Value = test::read_body_json(resp).await;
-    
+
     // Check error format
     assert_eq!(body["error"], "NOT_FOUND");
-    assert!(body["message"].as_str().unwrap().contains("Book with id 99999 not found"));
+    assert!(body["message"]
+        .as_str()
+        .unwrap()
+        .contains("Book with id 99999 not found"));
 }
 
 #[actix_web::test]
@@ -93,10 +102,13 @@ async fn test_delete_not_found_error_format() {
     // Assert
     assert_eq!(resp.status(), 404);
     let body: Value = test::read_body_json(resp).await;
-    
+
     // Check error format
     assert_eq!(body["error"], "NOT_FOUND");
-    assert!(body["message"].as_str().unwrap().contains("Book with id 99999 not found"));
+    assert!(body["message"]
+        .as_str()
+        .unwrap()
+        .contains("Book with id 99999 not found"));
 }
 
 #[actix_web::test]
@@ -119,10 +131,13 @@ async fn test_validation_error_empty_author() {
     // Assert
     assert_eq!(resp.status(), 422);
     let body: Value = test::read_body_json(resp).await;
-    
+
     // Check error format
     assert_eq!(body["error"], "VALIDATION_ERROR");
-    assert!(body["message"].as_str().unwrap().contains("Author is required"));
+    assert!(body["message"]
+        .as_str()
+        .unwrap()
+        .contains("Author is required"));
 }
 
 #[actix_web::test]
@@ -157,8 +172,11 @@ async fn test_update_validation_error() {
     // Assert
     assert_eq!(update_resp.status(), 422);
     let body: Value = test::read_body_json(update_resp).await;
-    
+
     // Check error format
     assert_eq!(body["error"], "VALIDATION_ERROR");
-    assert!(body["message"].as_str().unwrap().contains("Title cannot be empty"));
+    assert!(body["message"]
+        .as_str()
+        .unwrap()
+        .contains("Title cannot be empty"));
 }

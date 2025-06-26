@@ -1,11 +1,11 @@
 //! Unit tests for reading notes API endpoints
-//! 
+//!
 //! Tests the complete CRUD functionality for reading notes,
 //! including tag associations and book relationships.
 
 use actix_web::test;
-use serde_json::json;
 use reading_notes_backend::{create_app, models::book::CreateBookRequest};
+use serde_json::json;
 
 mod common;
 
@@ -31,10 +31,10 @@ async fn test_create_note() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
 
@@ -55,15 +55,18 @@ async fn test_create_note() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
-    
+
     // Verify response structure
     assert_eq!(response["book_id"], book_id);
     assert_eq!(response["title"], "Rust所有权概念");
     assert_eq!(response["note_type"], "quote");
-    assert_eq!(response["content"], "Rust的所有权系统是其内存安全的核心机制，每个值都有一个唯一的所有者。");
-    
+    assert_eq!(
+        response["content"],
+        "Rust的所有权系统是其内存安全的核心机制，每个值都有一个唯一的所有者。"
+    );
+
     // Check tags were created and associated
     let tags = response["tags"].as_array().unwrap();
     assert_eq!(tags.len(), 3);
@@ -93,9 +96,12 @@ async fn test_create_note_invalid_book() {
 
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 404);
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
-    assert!(response["message"].as_str().unwrap().contains("Book with id 99999 not found"));
+    assert!(response["message"]
+        .as_str()
+        .unwrap()
+        .contains("Book with id 99999 not found"));
 }
 
 /// Test creating a note with empty content
@@ -119,9 +125,12 @@ async fn test_create_note_empty_content() {
 
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 422);
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
-    assert!(response["message"].as_str().unwrap().contains("Content is required"));
+    assert!(response["message"]
+        .as_str()
+        .unwrap()
+        .contains("Content is required"));
 }
 
 /// Test getting a specific note by ID
@@ -146,7 +155,7 @@ async fn test_get_note() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -177,7 +186,7 @@ async fn test_get_note() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     assert_eq!(response["id"], note_id);
     assert_eq!(response["title"], "章节总结");
@@ -221,7 +230,7 @@ async fn test_list_notes() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -246,18 +255,16 @@ async fn test_list_notes() {
     }
 
     // List notes
-    let req = test::TestRequest::get()
-        .uri("/api/notes")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/notes").to_request();
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     assert_eq!(response["total"], 3);
     assert_eq!(response["page"], 1);
     assert_eq!(response["per_page"], 20);
-    
+
     let notes = response["notes"].as_array().unwrap();
     assert_eq!(notes.len(), 3);
 }
@@ -284,7 +291,7 @@ async fn test_list_notes_pagination() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -315,13 +322,13 @@ async fn test_list_notes_pagination() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     assert_eq!(response["total"], 5);
     assert_eq!(response["page"], 1);
     assert_eq!(response["per_page"], 2);
     assert_eq!(response["total_pages"], 3);
-    
+
     let notes = response["notes"].as_array().unwrap();
     assert_eq!(notes.len(), 2);
 }
@@ -348,7 +355,7 @@ async fn test_update_note() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -385,7 +392,7 @@ async fn test_update_note() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     assert_eq!(response["id"], note_id);
     assert_eq!(response["title"], "更新后的标题");
@@ -434,7 +441,7 @@ async fn test_update_note_empty_content() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -468,9 +475,12 @@ async fn test_update_note_empty_content() {
 
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 422);
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
-    assert!(response["message"].as_str().unwrap().contains("Content cannot be empty"));
+    assert!(response["message"]
+        .as_str()
+        .unwrap()
+        .contains("Content cannot be empty"));
 }
 
 /// Test soft deleting a note
@@ -495,7 +505,7 @@ async fn test_delete_note() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -632,13 +642,13 @@ async fn test_get_book_notes() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     assert_eq!(response["total"], 2);
-    
+
     let notes = response["notes"].as_array().unwrap();
     assert_eq!(notes.len(), 2);
-    
+
     // Verify all notes belong to book1
     for note in notes {
         assert_eq!(note["book_id"], book1_id);
@@ -681,7 +691,7 @@ async fn test_update_note_tags() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -714,9 +724,9 @@ async fn test_update_note_tags() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
-    
+
     // Verify the tags were updated
     let tags = response["tags"].as_array().unwrap();
     assert_eq!(tags.len(), 4);
@@ -724,7 +734,7 @@ async fn test_update_note_tags() {
     assert!(tags.contains(&json!("编程")));
     assert!(tags.contains(&json!("内存管理")));
     assert!(tags.contains(&json!("系统编程")));
-    
+
     // Verify old tags are no longer present
     assert!(!tags.contains(&json!("初始标签1")));
     assert!(!tags.contains(&json!("初始标签2")));

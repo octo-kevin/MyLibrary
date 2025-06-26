@@ -1,13 +1,13 @@
 //! Tag management HTTP handlers
-//! 
+//!
 //! Provides RESTful API endpoints for tag CRUD operations
 
+use crate::db::DbPool;
+use crate::errors::AppError;
+use crate::models::tag::{CreateTagRequest, Tag, TagListResponse, UpdateTag};
 use actix_web::{web, HttpResponse, Result};
 use serde::Deserialize;
 use utoipa::IntoParams;
-use crate::db::DbPool;
-use crate::errors::AppError;
-use crate::models::tag::{Tag, CreateTagRequest, UpdateTag, TagListResponse};
 
 /// Query parameters for tag listing
 #[derive(Debug, Deserialize, IntoParams)]
@@ -57,10 +57,12 @@ pub async fn create_tag(
     tag_data: web::Json<CreateTagRequest>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     // Validate required fields
     if tag_data.name.trim().is_empty() {
-        return Err(AppError::ValidationError("Tag name is required".to_string()));
+        return Err(AppError::ValidationError(
+            "Tag name is required".to_string(),
+        ));
     }
 
     let tag = Tag::create(&mut conn, tag_data.into_inner().into())?;
@@ -86,7 +88,7 @@ pub async fn get_tag(
     path: web::Path<TagPath>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     let tag = Tag::find_by_id(&mut conn, path.id)?;
     let response = tag.to_response(&mut conn)?;
 
@@ -109,14 +111,14 @@ pub async fn list_tags(
     query: web::Query<TagListQuery>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     // Validate and set defaults for pagination
     let page = query.page.unwrap_or(1).max(1);
     let per_page = query.per_page.unwrap_or(20).clamp(1, 100);
 
     let (tags, total) = Tag::list_with_search(&mut conn, query.search.as_deref(), page, per_page)?;
     let total_pages = ((total as f64) / (per_page as f64)).ceil() as u32;
-    
+
     let mut tag_responses = Vec::new();
     for tag in tags {
         tag_responses.push(tag.to_response(&mut conn)?);
@@ -149,7 +151,7 @@ pub async fn get_popular_tags(
     query: web::Query<PopularTagsQuery>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     let limit = query.limit.unwrap_or(10).clamp(1, 50);
     let popular_tags = Tag::get_popular(&mut conn, limit)?;
 
@@ -177,19 +179,21 @@ pub async fn update_tag(
     update_data: web::Json<UpdateTag>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     // Validate update data
     if let Some(ref name) = update_data.name {
         if name.trim().is_empty() {
-            return Err(AppError::ValidationError("Tag name cannot be empty".to_string()));
+            return Err(AppError::ValidationError(
+                "Tag name cannot be empty".to_string(),
+            ));
         }
     }
 
     let tag = Tag::update(&mut conn, path.id, update_data.into_inner())?;
-    
+
     // Update usage count after update
     tag.update_usage_count(&mut conn)?;
-    
+
     let response = tag.to_response(&mut conn)?;
 
     Ok(HttpResponse::Ok().json(response))
@@ -212,7 +216,7 @@ pub async fn delete_tag(
     path: web::Path<TagPath>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     Tag::soft_delete(&mut conn, path.id)?;
 
     Ok(HttpResponse::NoContent().finish())

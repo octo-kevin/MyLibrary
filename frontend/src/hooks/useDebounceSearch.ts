@@ -3,7 +3,7 @@ import { useState, useCallback, useRef } from 'react'
 export function useDebounceSearch(onSearch: (value: string) => void, delay: number = 500) {
   const [inputValue, setInputValue] = useState('')
   const [isComposing, setIsComposing] = useState(false)
-  const timeoutRef = useRef<number>()
+  const timeoutRef = useRef<number | undefined>(undefined)
 
   const handleInputChange = useCallback((value: string) => {
     setInputValue(value)

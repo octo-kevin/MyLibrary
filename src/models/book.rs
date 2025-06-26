@@ -1,9 +1,9 @@
-use chrono::{NaiveDate, DateTime, Utc};
+use crate::db::schema::books;
+use crate::errors::{AppError, Result};
+use chrono::{DateTime, NaiveDate, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use crate::db::schema::books;
-use crate::errors::{AppError, Result};
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Selectable)]
 #[diesel(table_name = books)]
@@ -42,31 +42,31 @@ pub struct UpdateBook {
     /// ISBN number (optional)
     #[schema(example = "978-0134685991")]
     pub isbn: Option<String>,
-    
+
     /// Book title (optional)
     #[schema(example = "Updated Title")]
     pub title: Option<String>,
-    
+
     /// Author name (optional)
     #[schema(example = "Updated Author")]
     pub author: Option<String>,
-    
+
     /// Publisher name (optional)
     #[schema(example = "Updated Publisher")]
     pub publisher: Option<String>,
-    
+
     /// Publication date (optional)
     #[schema(example = "2024-01-01")]
     pub publication_date: Option<NaiveDate>,
-    
+
     /// Number of pages (optional)
     #[schema(example = 500)]
     pub page_count: Option<i32>,
-    
+
     /// Cover image URL (optional)
     #[schema(example = "https://example.com/new-cover.jpg")]
     pub cover_image: Option<String>,
-    
+
     /// Book description (optional)
     #[schema(example = "Updated description")]
     pub description: Option<String>,
@@ -78,31 +78,31 @@ pub struct CreateBookRequest {
     /// ISBN number (optional)
     #[schema(example = "978-0134685991")]
     pub isbn: Option<String>,
-    
+
     /// Book title (required)
     #[schema(example = "Effective Java")]
     pub title: String,
-    
+
     /// Author name (required)
     #[schema(example = "Joshua Bloch")]
     pub author: String,
-    
+
     /// Publisher name (optional)
     #[schema(example = "Addison-Wesley")]
     pub publisher: Option<String>,
-    
+
     /// Publication date (optional, YYYY-MM-DD format)
     #[schema(example = "2017-12-27")]
     pub publication_date: Option<NaiveDate>,
-    
+
     /// Number of pages (optional)
     #[schema(example = 416)]
     pub page_count: Option<i32>,
-    
+
     /// Cover image URL (optional)
     #[schema(example = "https://example.com/cover.jpg")]
     pub cover_image: Option<String>,
-    
+
     /// Book description (optional)
     #[schema(example = "Best practices for the Java platform")]
     pub description: Option<String>,
@@ -114,43 +114,43 @@ pub struct BookResponse {
     /// Unique book identifier
     #[schema(example = 1)]
     pub id: i64,
-    
+
     /// ISBN number
     #[schema(example = "978-0134685991")]
     pub isbn: Option<String>,
-    
+
     /// Book title
     #[schema(example = "Effective Java")]
     pub title: String,
-    
+
     /// Author name
     #[schema(example = "Joshua Bloch")]
     pub author: String,
-    
+
     /// Publisher name
     #[schema(example = "Addison-Wesley")]
     pub publisher: Option<String>,
-    
+
     /// Publication date
     #[schema(example = "2017-12-27")]
     pub publication_date: Option<NaiveDate>,
-    
+
     /// Number of pages
     #[schema(example = 416)]
     pub page_count: Option<i32>,
-    
+
     /// Cover image URL
     #[schema(example = "https://example.com/cover.jpg")]
     pub cover_image: Option<String>,
-    
+
     /// Book description
     #[schema(example = "Best practices for the Java platform")]
     pub description: Option<String>,
-    
+
     /// Creation timestamp
     #[schema(example = "2024-01-01T12:00:00Z")]
     pub created_at: Option<DateTime<Utc>>,
-    
+
     /// Last update timestamp
     #[schema(example = "2024-01-01T12:00:00Z")]
     pub updated_at: Option<DateTime<Utc>>,
@@ -161,19 +161,19 @@ pub struct BookResponse {
 pub struct BookListResponse {
     /// List of books
     pub books: Vec<BookResponse>,
-    
+
     /// Total number of books
     #[schema(example = 50)]
     pub total: i64,
-    
+
     /// Current page number
     #[schema(example = 1)]
     pub page: u32,
-    
+
     /// Number of items per page
     #[schema(example = 20)]
     pub per_page: u32,
-    
+
     /// Total number of pages
     #[schema(example = 3)]
     pub total_pages: u32,
@@ -238,7 +238,7 @@ impl Book {
         per_page: u32,
     ) -> Result<(Vec<Book>, i64)> {
         let offset = ((page.saturating_sub(1)) * per_page) as i64;
-        
+
         let books = books::table
             .filter(books::deleted_at.is_null())
             .order(books::created_at.desc())
@@ -263,12 +263,13 @@ impl Book {
     ) -> Result<(Vec<Book>, i64)> {
         let search_pattern = format!("%{}%", query);
         let offset = ((page.saturating_sub(1)) * per_page) as i64;
-        
+
         let books = books::table
             .filter(books::deleted_at.is_null())
             .filter(
-                books::title.ilike(&search_pattern)
-                    .or(books::author.ilike(&search_pattern))
+                books::title
+                    .ilike(&search_pattern)
+                    .or(books::author.ilike(&search_pattern)),
             )
             .order(books::created_at.desc())
             .limit(per_page as i64)
@@ -278,8 +279,9 @@ impl Book {
         let total = books::table
             .filter(books::deleted_at.is_null())
             .filter(
-                books::title.ilike(&search_pattern)
-                    .or(books::author.ilike(&search_pattern))
+                books::title
+                    .ilike(&search_pattern)
+                    .or(books::author.ilike(&search_pattern)),
             )
             .count()
             .get_result::<i64>(conn)?;
@@ -288,11 +290,7 @@ impl Book {
     }
 
     /// Updates a book
-    pub fn update(
-        conn: &mut PgConnection,
-        book_id: i64,
-        update_data: UpdateBook,
-    ) -> Result<Book> {
+    pub fn update(conn: &mut PgConnection, book_id: i64, update_data: UpdateBook) -> Result<Book> {
         diesel::update(books::table.find(book_id))
             .filter(books::deleted_at.is_null())
             .set((
@@ -317,7 +315,10 @@ impl Book {
             .execute(conn)?;
 
         if affected == 0 {
-            return Err(AppError::NotFound(format!("Book with id {} not found", book_id)));
+            return Err(AppError::NotFound(format!(
+                "Book with id {} not found",
+                book_id
+            )));
         }
 
         Ok(())

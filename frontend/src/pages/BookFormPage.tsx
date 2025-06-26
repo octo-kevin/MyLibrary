@@ -95,10 +95,10 @@ export default function BookFormPage() {
     const submitData: CreateBookRequest = {
       title: values.title,
       author: values.author,
-      isbn: values.isbn || null,
-      publisher: values.publisher || null,
-      page_count: values.page_count || null,
-      description: values.description || null,
+      isbn: values.isbn || undefined,
+      publisher: values.publisher || undefined,
+      page_count: values.page_count || undefined,
+      description: values.description || undefined,
     }
 
     if (isEditing) {

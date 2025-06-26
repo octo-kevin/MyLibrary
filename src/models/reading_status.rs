@@ -1,8 +1,8 @@
-use chrono::{NaiveDate, DateTime, Utc};
+use crate::db::schema::reading_status;
+use bigdecimal::BigDecimal;
+use chrono::{DateTime, NaiveDate, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use bigdecimal::BigDecimal;
-use crate::db::schema::reading_status;
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Selectable)]
 #[diesel(table_name = reading_status)]

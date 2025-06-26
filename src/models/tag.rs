@@ -1,9 +1,9 @@
+use crate::db::schema::{book_tags, note_tags, tags};
+use crate::errors::{AppError, Result};
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use crate::db::schema::{tags, book_tags, note_tags};
-use crate::errors::{AppError, Result};
 
 /// Tag database model
 #[derive(Debug, Serialize, Deserialize, Queryable, Selectable, Identifiable)]
@@ -48,22 +48,22 @@ pub struct CreateTagRequest {
 pub struct TagResponse {
     #[schema(example = 1)]
     pub id: i64,
-    
+
     #[schema(example = "Important")]
     pub name: String,
-    
+
     #[schema(example = "important")]
     pub slug: String,
-    
+
     #[schema(example = 10)]
     pub book_count: i64,
-    
+
     #[schema(example = 25)]
     pub note_count: i64,
-    
+
     #[schema(example = 35)]
     pub usage_count: i32,
-    
+
     #[schema(example = "2024-01-01T12:00:00Z")]
     pub created_at: Option<DateTime<Utc>>,
 }
@@ -72,16 +72,16 @@ pub struct TagResponse {
 #[derive(Debug, Serialize, ToSchema)]
 pub struct TagListResponse {
     pub tags: Vec<TagResponse>,
-    
+
     #[schema(example = 50)]
     pub total: i64,
-    
+
     #[schema(example = 1)]
     pub page: u32,
-    
+
     #[schema(example = 20)]
     pub per_page: u32,
-    
+
     #[schema(example = 3)]
     pub total_pages: u32,
 }
@@ -91,13 +91,13 @@ pub struct TagListResponse {
 pub struct PopularTagResponse {
     #[schema(example = 1)]
     pub id: i64,
-    
+
     #[schema(example = "Important")]
     pub name: String,
-    
+
     #[schema(example = "important")]
     pub slug: String,
-    
+
     #[schema(example = 35)]
     pub usage_count: i32,
 }
@@ -131,11 +131,14 @@ impl Tag {
             .filter(tags::deleted_at.is_null())
             .first::<Tag>(conn)
             .optional()?;
-            
+
         if let Some(tag) = existing {
-            return Err(AppError::BadRequest(format!("Tag '{}' already exists", tag.name)));
+            return Err(AppError::BadRequest(format!(
+                "Tag '{}' already exists",
+                tag.name
+            )));
         }
-        
+
         diesel::insert_into(tags::table)
             .values(&new_tag)
             .returning(Tag::as_returning())
@@ -165,16 +168,16 @@ impl Tag {
     /// Finds or creates a tag by name
     pub fn find_or_create(conn: &mut PgConnection, name: String) -> Result<Tag> {
         let slug = slugify(&name);
-        
+
         // First try to find existing tag by slug
         if let Some(tag) = Self::find_by_slug(conn, &slug)? {
             return Ok(tag);
         }
-        
+
         // Create new tag if not found
-        let new_tag = NewTag { 
+        let new_tag = NewTag {
             name: name.trim().to_string(),
-            slug 
+            slug,
         };
         Self::create(conn, new_tag)
     }
@@ -186,7 +189,7 @@ impl Tag {
         per_page: u32,
     ) -> Result<(Vec<Tag>, i64)> {
         let offset = ((page.saturating_sub(1)) * per_page) as i64;
-        
+
         let tags = tags::table
             .filter(tags::deleted_at.is_null())
             .order(tags::name.asc())
@@ -210,15 +213,13 @@ impl Tag {
         per_page: u32,
     ) -> Result<(Vec<Tag>, i64)> {
         let offset = ((page.saturating_sub(1)) * per_page) as i64;
-        
+
         // Prepare search pattern if needed
         let search_pattern = search_query
             .filter(|s| !s.trim().is_empty())
             .map(|s| format!("%{}%", s.trim()));
-        
-        let mut query = tags::table
-            .filter(tags::deleted_at.is_null())
-            .into_boxed();
+
+        let mut query = tags::table.filter(tags::deleted_at.is_null()).into_boxed();
 
         // Apply search filter if provided
         if let Some(ref pattern) = search_pattern {
@@ -232,9 +233,7 @@ impl Tag {
             .load::<Tag>(conn)?;
 
         // Get total count with the same search filter
-        let mut count_query = tags::table
-            .filter(tags::deleted_at.is_null())
-            .into_boxed();
+        let mut count_query = tags::table.filter(tags::deleted_at.is_null()).into_boxed();
 
         if let Some(ref pattern) = search_pattern {
             count_query = count_query.filter(tags::name.ilike(pattern));
@@ -253,26 +252,25 @@ impl Tag {
             .order(tags::usage_count.desc())
             .limit(limit)
             .load::<Tag>(conn)?;
-            
-        Ok(popular_tags.into_iter().map(|tag| PopularTagResponse {
-            id: tag.id,
-            name: tag.name,
-            slug: tag.slug,
-            usage_count: tag.usage_count.unwrap_or(0),
-        }).collect())
+
+        Ok(popular_tags
+            .into_iter()
+            .map(|tag| PopularTagResponse {
+                id: tag.id,
+                name: tag.name,
+                slug: tag.slug,
+                usage_count: tag.usage_count.unwrap_or(0),
+            })
+            .collect())
     }
 
     /// Updates a tag
-    pub fn update(
-        conn: &mut PgConnection,
-        tag_id: i64,
-        update_data: UpdateTag,
-    ) -> Result<Tag> {
+    pub fn update(conn: &mut PgConnection, tag_id: i64, update_data: UpdateTag) -> Result<Tag> {
         // If updating name, also update slug
         let mut update_data = update_data;
         if let Some(ref name) = update_data.name {
             update_data.slug = Some(slugify(name));
-            
+
             // Check for duplicates
             if let Some(ref slug) = update_data.slug {
                 let existing = tags::table
@@ -281,13 +279,16 @@ impl Tag {
                     .filter(tags::deleted_at.is_null())
                     .first::<Tag>(conn)
                     .optional()?;
-                    
+
                 if existing.is_some() {
-                    return Err(AppError::BadRequest(format!("Tag '{}' already exists", name)));
+                    return Err(AppError::BadRequest(format!(
+                        "Tag '{}' already exists",
+                        name
+                    )));
                 }
             }
         }
-        
+
         diesel::update(tags::table.find(tag_id))
             .filter(tags::deleted_at.is_null())
             .set(&update_data)
@@ -309,7 +310,10 @@ impl Tag {
             .execute(conn)?;
 
         if affected == 0 {
-            return Err(AppError::NotFound(format!("Tag with id {} not found", tag_id)));
+            return Err(AppError::NotFound(format!(
+                "Tag with id {} not found",
+                tag_id
+            )));
         }
 
         Ok(())
@@ -318,7 +322,7 @@ impl Tag {
     /// Gets the count of books using this tag
     pub fn get_book_count(&self, conn: &mut PgConnection) -> Result<i64> {
         use crate::db::schema::books;
-        
+
         book_tags::table
             .inner_join(books::table)
             .filter(book_tags::tag_id.eq(self.id))
@@ -331,7 +335,7 @@ impl Tag {
     /// Gets the count of notes using this tag
     pub fn get_note_count(&self, conn: &mut PgConnection) -> Result<i64> {
         use crate::db::schema::reading_notes;
-        
+
         note_tags::table
             .inner_join(reading_notes::table)
             .filter(note_tags::tag_id.eq(self.id))
@@ -346,11 +350,11 @@ impl Tag {
         let book_count = self.get_book_count(conn)?;
         let note_count = self.get_note_count(conn)?;
         let total_count = (book_count + note_count) as i32;
-        
+
         diesel::update(tags::table.find(self.id))
             .set(tags::usage_count.eq(Some(total_count)))
             .execute(conn)?;
-            
+
         Ok(())
     }
 }
@@ -360,7 +364,7 @@ impl Tag {
     pub fn to_response(&self, conn: &mut PgConnection) -> Result<TagResponse> {
         let book_count = self.get_book_count(conn)?;
         let note_count = self.get_note_count(conn)?;
-        
+
         Ok(TagResponse {
             id: self.id,
             name: self.name.clone(),

@@ -1,3 +1,3 @@
 pub mod pagination;
 
-pub use pagination::{PaginationParams, PaginatedResponse};
+pub use pagination::{PaginatedResponse, PaginationParams};

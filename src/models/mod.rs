@@ -1,11 +1,16 @@
 pub mod book;
 pub mod category;
-pub mod tag;
 pub mod note;
 pub mod reading_status;
+pub mod tag;
 
-pub use book::{Book, NewBook, UpdateBook, CreateBookRequest, BookResponse, BookListResponse};
+pub use book::{Book, BookListResponse, BookResponse, CreateBookRequest, NewBook, UpdateBook};
 pub use category::{Category, NewCategory};
-pub use tag::{Tag, NewTag, UpdateTag, CreateTagRequest, TagResponse, TagListResponse, PopularTagResponse};
-pub use note::{ReadingNote, NewReadingNote, UpdateReadingNote, CreateNoteRequest, NoteResponse, NoteListResponse, NoteType};
-pub use reading_status::{ReadingStatus, NewReadingStatus, UpdateReadingStatus};
+pub use note::{
+    CreateNoteRequest, NewReadingNote, NoteListResponse, NoteResponse, NoteType, ReadingNote,
+    UpdateReadingNote,
+};
+pub use reading_status::{NewReadingStatus, ReadingStatus, UpdateReadingStatus};
+pub use tag::{
+    CreateTagRequest, NewTag, PopularTagResponse, Tag, TagListResponse, TagResponse, UpdateTag,
+};

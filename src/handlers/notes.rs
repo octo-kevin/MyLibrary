@@ -1,13 +1,13 @@
 //! Reading note management HTTP handlers
-//! 
+//!
 //! Provides RESTful API endpoints for note CRUD operations
 
+use crate::db::DbPool;
+use crate::errors::AppError;
+use crate::models::note::{CreateNoteRequest, NoteListResponse, ReadingNote, UpdateReadingNote};
 use actix_web::{web, HttpResponse, Result};
 use serde::Deserialize;
 use utoipa::IntoParams;
-use crate::db::DbPool;
-use crate::errors::AppError;
-use crate::models::note::{ReadingNote, CreateNoteRequest, UpdateReadingNote, NoteListResponse};
 
 /// Query parameters for note listing
 #[derive(Debug, Deserialize, IntoParams)]
@@ -60,7 +60,7 @@ pub async fn create_note(
     note_data: web::Json<CreateNoteRequest>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     // Validate required fields
     if note_data.content.trim().is_empty() {
         return Err(AppError::ValidationError("Content is required".to_string()));
@@ -69,12 +69,12 @@ pub async fn create_note(
     let new_note = note_data.into_inner();
     let tags = new_note.tags.clone();
     let note = ReadingNote::create(&mut conn, new_note.into())?;
-    
+
     // Set tags if provided
     if let Some(tag_names) = tags {
         note.set_tags(&mut conn, tag_names)?;
     }
-    
+
     let response = note.to_response(&mut conn)?;
 
     Ok(HttpResponse::Created().json(response))
@@ -97,7 +97,7 @@ pub async fn get_note(
     path: web::Path<NotePath>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     let note = ReadingNote::find_by_id(&mut conn, path.id)?;
     let response = note.to_response(&mut conn)?;
 
@@ -120,7 +120,7 @@ pub async fn list_notes(
     query: web::Query<NoteListQuery>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     // Validate and set defaults for pagination
     let page = query.page.unwrap_or(1).max(1);
     let per_page = query.per_page.unwrap_or(20).clamp(1, 100);
@@ -135,7 +135,7 @@ pub async fn list_notes(
 
     let total_pages = ((total as f64) / (per_page as f64)).ceil() as u32;
     let mut note_responses = Vec::new();
-    
+
     for note in notes {
         note_responses.push(note.to_response(&mut conn)?);
     }
@@ -169,18 +169,18 @@ pub async fn get_book_notes(
     query: web::Query<NoteListQuery>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     // Verify book exists
     use crate::models::book::Book;
     Book::find_by_id(&mut conn, path.book_id)?;
-    
+
     // Get notes for the book
     let page = query.page.unwrap_or(1).max(1);
     let per_page = query.per_page.unwrap_or(20).clamp(1, 100);
-    
+
     let (notes, total) = ReadingNote::find_by_book_id(&mut conn, path.book_id, page, per_page)?;
     let total_pages = ((total as f64) / (per_page as f64)).ceil() as u32;
-    
+
     let mut note_responses = Vec::new();
     for note in notes {
         note_responses.push(note.to_response(&mut conn)?);
@@ -217,11 +217,13 @@ pub async fn update_note(
     update_data: web::Json<UpdateReadingNote>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     // Validate update data
     if let Some(ref content) = update_data.content {
         if content.trim().is_empty() {
-            return Err(AppError::ValidationError("Content cannot be empty".to_string()));
+            return Err(AppError::ValidationError(
+                "Content cannot be empty".to_string(),
+            ));
         }
     }
 
@@ -250,10 +252,10 @@ pub async fn update_note_tags(
     tags: web::Json<Vec<String>>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     let note = ReadingNote::find_by_id(&mut conn, path.id)?;
     note.set_tags(&mut conn, tags.into_inner())?;
-    
+
     let response = note.to_response(&mut conn)?;
 
     Ok(HttpResponse::Ok().json(response))
@@ -276,7 +278,7 @@ pub async fn delete_note(
     path: web::Path<NotePath>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     ReadingNote::soft_delete(&mut conn, path.id)?;
 
     Ok(HttpResponse::NoContent().finish())

@@ -1,13 +1,13 @@
 //! Book management HTTP handlers
-//! 
+//!
 //! Provides RESTful API endpoints for book CRUD operations
 
+use crate::db::DbPool;
+use crate::errors::AppError;
+use crate::models::book::{Book, BookListResponse, BookResponse, CreateBookRequest, UpdateBook};
 use actix_web::{web, HttpResponse, Result};
 use serde::Deserialize;
 use utoipa::IntoParams;
-use crate::db::DbPool;
-use crate::errors::AppError;
-use crate::models::book::{Book, CreateBookRequest, UpdateBook, BookResponse, BookListResponse};
 
 /// Query parameters for book listing
 #[derive(Debug, Deserialize, IntoParams)]
@@ -48,7 +48,7 @@ pub async fn create_book(
     book_data: web::Json<CreateBookRequest>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     // Validate required fields
     if book_data.title.trim().is_empty() {
         return Err(AppError::ValidationError("Title is required".to_string()));
@@ -81,7 +81,7 @@ pub async fn get_book(
     path: web::Path<BookPath>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     let book = Book::find_by_id(&mut conn, path.id)?;
     let response = BookResponse::from(book);
 
@@ -104,7 +104,7 @@ pub async fn list_books(
     query: web::Query<BookListQuery>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     // Validate and set defaults for pagination
     let page = query.page.unwrap_or(1).max(1);
     let per_page = query.per_page.unwrap_or(20).clamp(1, 100);
@@ -153,16 +153,20 @@ pub async fn update_book(
     update_data: web::Json<UpdateBook>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     // Validate update data
     if let Some(ref title) = update_data.title {
         if title.trim().is_empty() {
-            return Err(AppError::ValidationError("Title cannot be empty".to_string()));
+            return Err(AppError::ValidationError(
+                "Title cannot be empty".to_string(),
+            ));
         }
     }
     if let Some(ref author) = update_data.author {
         if author.trim().is_empty() {
-            return Err(AppError::ValidationError("Author cannot be empty".to_string()));
+            return Err(AppError::ValidationError(
+                "Author cannot be empty".to_string(),
+            ));
         }
     }
 
@@ -189,7 +193,7 @@ pub async fn delete_book(
     path: web::Path<BookPath>,
 ) -> Result<HttpResponse, AppError> {
     let mut conn = pool.get().map_err(|_| AppError::InternalError)?;
-    
+
     Book::soft_delete(&mut conn, path.id)?;
 
     Ok(HttpResponse::NoContent().finish())
