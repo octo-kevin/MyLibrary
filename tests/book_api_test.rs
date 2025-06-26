@@ -1,9 +1,9 @@
 mod common;
 
 use actix_web::test;
+use chrono::NaiveDate;
 use reading_notes_backend::{create_app, models::book::CreateBookRequest};
 use serde_json::Value;
-use chrono::NaiveDate;
 
 #[actix_web::test]
 async fn test_create_book_success() {
@@ -138,9 +138,7 @@ async fn test_list_books_empty() {
     let app = test::init_service(create_app(test_db.pool.clone())).await;
 
     // Act
-    let req = test::TestRequest::get()
-        .uri("/api/books")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/books").to_request();
 
     let resp = test::call_service(&app, req).await;
 
@@ -209,20 +207,32 @@ async fn test_search_books() {
         CreateBookRequest {
             title: "Effective Java".to_string(),
             author: "Joshua Bloch".to_string(),
-            isbn: None, publisher: None, publication_date: None,
-            page_count: None, cover_image: None, description: None,
+            isbn: None,
+            publisher: None,
+            publication_date: None,
+            page_count: None,
+            cover_image: None,
+            description: None,
         },
         CreateBookRequest {
             title: "Clean Code".to_string(),
             author: "Robert Martin".to_string(),
-            isbn: None, publisher: None, publication_date: None,
-            page_count: None, cover_image: None, description: None,
+            isbn: None,
+            publisher: None,
+            publication_date: None,
+            page_count: None,
+            cover_image: None,
+            description: None,
         },
         CreateBookRequest {
             title: "Design Patterns".to_string(),
             author: "Gang of Four".to_string(),
-            isbn: None, publisher: None, publication_date: None,
-            page_count: None, cover_image: None, description: None,
+            isbn: None,
+            publisher: None,
+            publication_date: None,
+            page_count: None,
+            cover_image: None,
+            description: None,
         },
     ];
 
@@ -259,8 +269,12 @@ async fn test_update_book_success() {
     let new_book = CreateBookRequest {
         title: "Original Title".to_string(),
         author: "Original Author".to_string(),
-        isbn: None, publisher: None, publication_date: None,
-        page_count: None, cover_image: None, description: None,
+        isbn: None,
+        publisher: None,
+        publication_date: None,
+        page_count: None,
+        cover_image: None,
+        description: None,
     };
 
     let create_req = test::TestRequest::post()
@@ -304,8 +318,12 @@ async fn test_delete_book_success() {
     let new_book = CreateBookRequest {
         title: "Book to Delete".to_string(),
         author: "Some Author".to_string(),
-        isbn: None, publisher: None, publication_date: None,
-        page_count: None, cover_image: None, description: None,
+        isbn: None,
+        publisher: None,
+        publication_date: None,
+        page_count: None,
+        cover_image: None,
+        description: None,
     };
 
     let create_req = test::TestRequest::post()

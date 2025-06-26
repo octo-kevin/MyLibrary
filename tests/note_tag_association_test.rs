@@ -1,11 +1,11 @@
 //! Unit tests for note-tag associations
-//! 
+//!
 //! Tests the many-to-many relationship between notes and tags,
 //! including automatic tag creation, usage count updates, and association management.
 
 use actix_web::test;
-use serde_json::json;
 use reading_notes_backend::{create_app, models::book::CreateBookRequest};
+use serde_json::json;
 
 mod common;
 
@@ -31,7 +31,7 @@ async fn test_note_tag_basic_association() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -48,7 +48,7 @@ async fn test_note_tag_basic_association() {
             .uri("/api/tags")
             .set_json(&tag_data)
             .to_request();
-        
+
         let resp = test::call_service(&app, req).await;
         assert!(resp.status().is_success());
     }
@@ -69,10 +69,10 @@ async fn test_note_tag_basic_association() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let note_response: serde_json::Value = test::read_body_json(resp).await;
     let note_tags = note_response["tags"].as_array().unwrap();
-    
+
     // Verify correct tags are associated
     assert_eq!(note_tags.len(), 2);
     assert!(note_tags.contains(&json!("标签A")));
@@ -102,7 +102,7 @@ async fn test_tag_usage_count_multiple_notes() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -153,9 +153,7 @@ async fn test_tag_usage_count_multiple_notes() {
     test::call_service(&app, req).await;
 
     // Check tag usage counts
-    let req = test::TestRequest::get()
-        .uri("/api/tags")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tags").to_request();
 
     let resp = test::call_service(&app, req).await;
     let response: serde_json::Value = test::read_body_json(resp).await;
@@ -168,11 +166,11 @@ async fn test_tag_usage_count_multiple_notes() {
             "共同标签" => {
                 assert_eq!(tag["note_count"], 3);
                 assert_eq!(tag["usage_count"], 3);
-            },
+            }
             "独有标签1" | "独有标签2" => {
                 assert_eq!(tag["note_count"], 1);
                 assert_eq!(tag["usage_count"], 1);
-            },
+            }
             _ => {}
         }
     }
@@ -200,7 +198,7 @@ async fn test_update_note_tags_usage_count() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -224,9 +222,7 @@ async fn test_update_note_tags_usage_count() {
     let note_id = note_response["id"].as_i64().unwrap();
 
     // Verify initial tag usage counts
-    let req = test::TestRequest::get()
-        .uri("/api/tags")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tags").to_request();
 
     let resp = test::call_service(&app, req).await;
     let response: serde_json::Value = test::read_body_json(resp).await;
@@ -244,16 +240,14 @@ async fn test_update_note_tags_usage_count() {
     assert!(resp.status().is_success());
 
     // Verify tag changes
-    let req = test::TestRequest::get()
-        .uri("/api/tags")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tags").to_request();
 
     let resp = test::call_service(&app, req).await;
     let response: serde_json::Value = test::read_body_json(resp).await;
-    
+
     // Should now have 5 tags total (2 old + 3 new)
     assert_eq!(response["total"], 5);
-    
+
     let tags = response["tags"].as_array().unwrap();
     for tag in tags {
         let tag_name = tag["name"].as_str().unwrap();
@@ -262,12 +256,12 @@ async fn test_update_note_tags_usage_count() {
                 // Old tags should have 0 usage count
                 assert_eq!(tag["note_count"], 0);
                 assert_eq!(tag["usage_count"], 0);
-            },
+            }
             "新标签1" | "新标签2" | "新标签3" => {
                 // New tags should have 1 usage count
                 assert_eq!(tag["note_count"], 1);
                 assert_eq!(tag["usage_count"], 1);
-            },
+            }
             _ => {}
         }
     }
@@ -295,7 +289,7 @@ async fn test_partial_tag_update() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -328,10 +322,10 @@ async fn test_partial_tag_update() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     let tags = response["tags"].as_array().unwrap();
-    
+
     // Verify final tags
     assert_eq!(tags.len(), 2);
     assert!(tags.contains(&json!("保留标签")));
@@ -339,9 +333,7 @@ async fn test_partial_tag_update() {
     assert!(!tags.contains(&json!("移除标签")));
 
     // Verify tag usage counts
-    let req = test::TestRequest::get()
-        .uri("/api/tags")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tags").to_request();
 
     let resp = test::call_service(&app, req).await;
     let response: serde_json::Value = test::read_body_json(resp).await;
@@ -353,11 +345,11 @@ async fn test_partial_tag_update() {
             "保留标签" | "新增标签" => {
                 assert_eq!(tag["note_count"], 1);
                 assert_eq!(tag["usage_count"], 1);
-            },
+            }
             "移除标签" => {
                 assert_eq!(tag["note_count"], 0);
                 assert_eq!(tag["usage_count"], 0);
-            },
+            }
             _ => {}
         }
     }
@@ -385,7 +377,7 @@ async fn test_tag_usage_with_note_deletion() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -422,9 +414,7 @@ async fn test_tag_usage_with_note_deletion() {
     test::call_service(&app, req).await;
 
     // Verify initial tag usage counts
-    let req = test::TestRequest::get()
-        .uri("/api/tags")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tags").to_request();
 
     let resp = test::call_service(&app, req).await;
     let response: serde_json::Value = test::read_body_json(resp).await;
@@ -448,13 +438,13 @@ async fn test_tag_usage_with_note_deletion() {
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 204);
 
-    // Note: In our current implementation, tag usage counts don't automatically 
+    // Note: In our current implementation, tag usage counts don't automatically
     // decrease when notes are deleted (soft delete). This is by design to maintain
     // historical data integrity. The counts represent total usage over time.
-    
+
     // However, if we wanted to test dynamic count updates, we would check:
     // - 共享标签 count should be 1
-    // - 独有标签1 count should be 0  
+    // - 独有标签1 count should be 0
     // - 独有标签2 count should remain 1
 }
 
@@ -480,13 +470,13 @@ async fn test_complex_tag_associations() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
 
     // Test scenario: Create note with mixed existing and new tags
-    
+
     // First, create some existing tags
     let existing_tags = vec!["现有标签1", "现有标签2"];
     for name in &existing_tags {
@@ -518,10 +508,10 @@ async fn test_complex_tag_associations() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let note_response: serde_json::Value = test::read_body_json(resp).await;
     let note_tags = note_response["tags"].as_array().unwrap();
-    
+
     // Verify all tags are associated
     assert_eq!(note_tags.len(), 4);
     assert!(note_tags.contains(&json!("现有标签1")));
@@ -530,9 +520,7 @@ async fn test_complex_tag_associations() {
     assert!(note_tags.contains(&json!("新标签2")));
 
     // Verify all tags exist in the system
-    let req = test::TestRequest::get()
-        .uri("/api/tags")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tags").to_request();
 
     let resp = test::call_service(&app, req).await;
     let response: serde_json::Value = test::read_body_json(resp).await;
@@ -571,7 +559,7 @@ async fn test_empty_tags_array() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -592,10 +580,10 @@ async fn test_empty_tags_array() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let note_response: serde_json::Value = test::read_body_json(resp).await;
     let note_tags = note_response["tags"].as_array().unwrap();
-    
+
     // Should have no tags
     assert_eq!(note_tags.len(), 0);
 
@@ -610,10 +598,10 @@ async fn test_empty_tags_array() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     let tags = response["tags"].as_array().unwrap();
-    
+
     assert_eq!(tags.len(), 2);
     assert!(tags.contains(&json!("后加标签1")));
     assert!(tags.contains(&json!("后加标签2")));
@@ -641,7 +629,7 @@ async fn test_update_to_empty_tags() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -674,17 +662,15 @@ async fn test_update_to_empty_tags() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     let tags = response["tags"].as_array().unwrap();
-    
+
     // Should have no tags
     assert_eq!(tags.len(), 0);
 
     // Verify the tags still exist but with updated usage counts
-    let req = test::TestRequest::get()
-        .uri("/api/tags")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tags").to_request();
 
     let resp = test::call_service(&app, req).await;
     let response: serde_json::Value = test::read_body_json(resp).await;

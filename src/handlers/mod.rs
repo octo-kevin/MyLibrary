@@ -17,6 +17,6 @@ pub async fn health_check() -> HttpResponse {
         status: "ok".to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
     };
-    
+
     HttpResponse::Ok().json(response)
 }

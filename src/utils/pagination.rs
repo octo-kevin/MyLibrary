@@ -8,12 +8,9 @@ pub struct PaginationParams {
 
 impl PaginationParams {
     pub fn get_limit(&self, default: i64, max: i64) -> i64 {
-        self.limit
-            .unwrap_or(default)
-            .min(max)
-            .max(1)
+        self.limit.unwrap_or(default).min(max).max(1)
     }
-    
+
     pub fn get_offset(&self, limit: i64) -> i64 {
         let page = self.page.unwrap_or(1).max(1);
         (page - 1) * limit
@@ -32,7 +29,7 @@ pub struct PaginatedResponse<T> {
 impl<T> PaginatedResponse<T> {
     pub fn new(data: Vec<T>, total: i64, page: i64, limit: i64) -> Self {
         let total_pages = (total as f64 / limit as f64).ceil() as i64;
-        
+
         Self {
             data,
             total,

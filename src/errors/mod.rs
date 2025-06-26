@@ -1,5 +1,5 @@
 //! Error handling module for the application
-//! 
+//!
 //! Provides a centralized error type that can be converted to HTTP responses
 
 use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
@@ -8,7 +8,7 @@ use thiserror::Error;
 use utoipa::ToSchema;
 
 /// Main application error type
-/// 
+///
 /// All errors in the application should be converted to this type
 /// for consistent error handling and HTTP response generation
 #[derive(Error, Debug)]
@@ -16,27 +16,27 @@ pub enum AppError {
     /// Generic internal server error
     #[error("Internal server error")]
     InternalError,
-    
+
     /// Bad request with custom message
     #[error("Bad request: {0}")]
     BadRequest(String),
-    
+
     /// Resource not found with description
     #[error("Not found: {0}")]
     NotFound(String),
-    
+
     /// Validation error with details
     #[error("Validation error: {0}")]
     ValidationError(String),
-    
+
     /// Database operation error
     #[error("Database error: {0}")]
     DatabaseError(#[from] diesel::result::Error),
-    
+
     /// Environment variable error
     #[error("Environment variable error: {0}")]
     EnvVarError(#[from] std::env::VarError),
-    
+
     /// JSON serialization/deserialization error
     #[error("JSON error: {0}")]
     JsonError(#[from] serde_json::Error),
@@ -61,10 +61,10 @@ impl ResponseError for AppError {
             error: self.error_type(),
             message: self.to_string(),
         };
-        
+
         HttpResponse::build(status_code).json(error_response)
     }
-    
+
     /// Maps error variants to HTTP status codes
     fn status_code(&self) -> StatusCode {
         match self {
@@ -90,7 +90,8 @@ impl AppError {
             AppError::DatabaseError(_) => "DATABASE_ERROR",
             AppError::EnvVarError(_) => "CONFIGURATION_ERROR",
             AppError::JsonError(_) => "JSON_ERROR",
-        }.to_string()
+        }
+        .to_string()
     }
 }
 

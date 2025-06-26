@@ -1,7 +1,7 @@
+use crate::db::schema::categories;
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use crate::db::schema::categories;
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Selectable)]
 #[diesel(table_name = categories)]

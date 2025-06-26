@@ -1,18 +1,18 @@
+use crate::db::schema::{note_tags, reading_notes};
+use crate::errors::{AppError, Result};
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use crate::db::schema::{reading_notes, note_tags};
-use crate::errors::{AppError, Result};
 
 /// Note type enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum NoteType {
-    Quote,      // 摘录
-    Summary,    // 总结
-    Thought,    // 感想
-    General,    // 一般笔记
+    Quote,   // 摘录
+    Summary, // 总结
+    Thought, // 感想
+    General, // 一般笔记
 }
 
 impl From<String> for NoteType {
@@ -72,16 +72,16 @@ pub struct NewReadingNote {
 pub struct UpdateReadingNote {
     #[schema(example = "Updated Note Title")]
     pub title: Option<String>,
-    
+
     #[schema(example = "Updated note content in Markdown")]
     pub content: Option<String>,
-    
+
     #[schema(example = "summary")]
     pub note_type: Option<String>,
-    
+
     #[schema(example = "Pages 10-20")]
     pub page_reference: Option<String>,
-    
+
     #[schema(example = true)]
     pub is_favorite: Option<bool>,
 }
@@ -91,22 +91,22 @@ pub struct UpdateReadingNote {
 pub struct CreateNoteRequest {
     #[schema(example = 1)]
     pub book_id: i64,
-    
+
     #[schema(example = "Chapter 1 Summary")]
     pub title: Option<String>,
-    
+
     #[schema(example = "This chapter introduces the main concepts...")]
     pub content: String,
-    
+
     #[schema(example = "summary")]
     pub note_type: Option<NoteType>,
-    
+
     #[schema(example = "Pages 1-15")]
     pub page_reference: Option<String>,
-    
+
     #[schema(example = false)]
     pub is_favorite: Option<bool>,
-    
+
     #[schema(example = json!(["important", "chapter1"]))]
     pub tags: Option<Vec<String>>,
 }
@@ -116,31 +116,31 @@ pub struct CreateNoteRequest {
 pub struct NoteResponse {
     #[schema(example = 1)]
     pub id: i64,
-    
+
     #[schema(example = 1)]
     pub book_id: i64,
-    
+
     #[schema(example = "Chapter 1 Summary")]
     pub title: Option<String>,
-    
+
     #[schema(example = "This chapter introduces the main concepts...")]
     pub content: String,
-    
+
     #[schema(example = "summary")]
     pub note_type: Option<NoteType>,
-    
+
     #[schema(example = "Pages 1-15")]
     pub page_reference: Option<String>,
-    
+
     #[schema(example = false)]
     pub is_favorite: bool,
-    
+
     #[schema(example = json!(["important", "chapter1"]))]
     pub tags: Vec<String>,
-    
+
     #[schema(example = "2024-01-01T12:00:00Z")]
     pub created_at: Option<DateTime<Utc>>,
-    
+
     #[schema(example = "2024-01-01T12:00:00Z")]
     pub updated_at: Option<DateTime<Utc>>,
 }
@@ -149,16 +149,16 @@ pub struct NoteResponse {
 #[derive(Debug, Serialize, ToSchema)]
 pub struct NoteListResponse {
     pub notes: Vec<NoteResponse>,
-    
+
     #[schema(example = 50)]
     pub total: i64,
-    
+
     #[schema(example = 1)]
     pub page: u32,
-    
+
     #[schema(example = 20)]
     pub per_page: u32,
-    
+
     #[schema(example = 3)]
     pub total_pages: u32,
 }
@@ -180,7 +180,7 @@ impl ReadingNote {
     /// Creates a new reading note
     pub fn create(conn: &mut PgConnection, new_note: NewReadingNote) -> Result<ReadingNote> {
         use crate::db::schema::books;
-        
+
         // Verify book exists and is not deleted
         let book_exists = books::table
             .filter(books::id.eq(new_note.book_id))
@@ -188,11 +188,14 @@ impl ReadingNote {
             .select(books::id)
             .first::<i64>(conn)
             .optional()?;
-            
+
         if book_exists.is_none() {
-            return Err(AppError::NotFound(format!("Book with id {} not found", new_note.book_id)));
+            return Err(AppError::NotFound(format!(
+                "Book with id {} not found",
+                new_note.book_id
+            )));
         }
-        
+
         diesel::insert_into(reading_notes::table)
             .values(&new_note)
             .returning(ReadingNote::as_returning())
@@ -217,7 +220,7 @@ impl ReadingNote {
         per_page: u32,
     ) -> Result<(Vec<ReadingNote>, i64)> {
         let offset = ((page.saturating_sub(1)) * per_page) as i64;
-        
+
         let notes = reading_notes::table
             .filter(reading_notes::book_id.eq(book_id))
             .filter(reading_notes::deleted_at.is_null())
@@ -242,7 +245,7 @@ impl ReadingNote {
         per_page: u32,
     ) -> Result<(Vec<ReadingNote>, i64)> {
         let offset = ((page.saturating_sub(1)) * per_page) as i64;
-        
+
         let notes = reading_notes::table
             .filter(reading_notes::deleted_at.is_null())
             .order(reading_notes::created_at.desc())
@@ -267,12 +270,13 @@ impl ReadingNote {
     ) -> Result<(Vec<ReadingNote>, i64)> {
         let search_pattern = format!("%{}%", query);
         let offset = ((page.saturating_sub(1)) * per_page) as i64;
-        
+
         let notes = reading_notes::table
             .filter(reading_notes::deleted_at.is_null())
             .filter(
-                reading_notes::title.ilike(&search_pattern)
-                    .or(reading_notes::content.ilike(&search_pattern))
+                reading_notes::title
+                    .ilike(&search_pattern)
+                    .or(reading_notes::content.ilike(&search_pattern)),
             )
             .order(reading_notes::created_at.desc())
             .limit(per_page as i64)
@@ -282,8 +286,9 @@ impl ReadingNote {
         let total = reading_notes::table
             .filter(reading_notes::deleted_at.is_null())
             .filter(
-                reading_notes::title.ilike(&search_pattern)
-                    .or(reading_notes::content.ilike(&search_pattern))
+                reading_notes::title
+                    .ilike(&search_pattern)
+                    .or(reading_notes::content.ilike(&search_pattern)),
             )
             .count()
             .get_result::<i64>(conn)?;
@@ -300,17 +305,17 @@ impl ReadingNote {
         per_page: u32,
     ) -> Result<(Vec<ReadingNote>, i64)> {
         let offset = ((page.saturating_sub(1)) * per_page) as i64;
-        
+
         // Prepare search pattern if needed
         let search_pattern = search_query
             .filter(|s| !s.trim().is_empty())
             .map(|s| format!("%{}%", s.trim()));
-        
+
         // Prepare note type filter if needed
         let note_type = note_type_filter
             .filter(|s| !s.trim().is_empty())
             .map(|s| s.trim().to_string());
-        
+
         let mut query = reading_notes::table
             .filter(reading_notes::deleted_at.is_null())
             .into_boxed();
@@ -318,8 +323,9 @@ impl ReadingNote {
         // Apply search filter if provided
         if let Some(ref pattern) = search_pattern {
             query = query.filter(
-                reading_notes::title.ilike(pattern)
-                    .or(reading_notes::content.ilike(pattern))
+                reading_notes::title
+                    .ilike(pattern)
+                    .or(reading_notes::content.ilike(pattern)),
             );
         }
 
@@ -341,8 +347,9 @@ impl ReadingNote {
 
         if let Some(ref pattern) = search_pattern {
             count_query = count_query.filter(
-                reading_notes::title.ilike(pattern)
-                    .or(reading_notes::content.ilike(pattern))
+                reading_notes::title
+                    .ilike(pattern)
+                    .or(reading_notes::content.ilike(pattern)),
             );
         }
 
@@ -363,10 +370,7 @@ impl ReadingNote {
     ) -> Result<ReadingNote> {
         diesel::update(reading_notes::table.find(note_id))
             .filter(reading_notes::deleted_at.is_null())
-            .set((
-                &update_data,
-                reading_notes::updated_at.eq(Some(Utc::now())),
-            ))
+            .set((&update_data, reading_notes::updated_at.eq(Some(Utc::now()))))
             .returning(ReadingNote::as_returning())
             .get_result(conn)
             .map_err(|e| match e {
@@ -385,12 +389,14 @@ impl ReadingNote {
             .execute(conn)?;
 
         if affected == 0 {
-            return Err(AppError::NotFound(format!("Note with id {} not found", note_id)));
+            return Err(AppError::NotFound(format!(
+                "Note with id {} not found",
+                note_id
+            )));
         }
 
         // Also remove tag associations
-        diesel::delete(note_tags::table.filter(note_tags::note_id.eq(note_id)))
-            .execute(conn)?;
+        diesel::delete(note_tags::table.filter(note_tags::note_id.eq(note_id))).execute(conn)?;
 
         Ok(())
     }
@@ -398,7 +404,7 @@ impl ReadingNote {
     /// Gets tags associated with this note
     pub fn get_tags(&self, conn: &mut PgConnection) -> Result<Vec<String>> {
         use crate::db::schema::tags;
-        
+
         let tag_names = note_tags::table
             .inner_join(tags::table)
             .filter(note_tags::note_id.eq(self.id))
@@ -412,7 +418,7 @@ impl ReadingNote {
     /// Associates tags with this note
     pub fn set_tags(&self, conn: &mut PgConnection, tag_names: Vec<String>) -> Result<()> {
         use crate::models::tag::Tag;
-        
+
         // Start a transaction
         conn.transaction(|conn| {
             // Remove existing associations
@@ -449,7 +455,7 @@ impl ReadingNote {
 impl ReadingNote {
     pub fn to_response(&self, conn: &mut PgConnection) -> Result<NoteResponse> {
         let tags = self.get_tags(conn).unwrap_or_default();
-        
+
         Ok(NoteResponse {
             id: self.id,
             book_id: self.book_id,
@@ -475,7 +481,7 @@ mod tests {
         assert_eq!(String::from(NoteType::Summary), "summary");
         assert_eq!(String::from(NoteType::Thought), "thought");
         assert_eq!(String::from(NoteType::General), "general");
-        
+
         assert_eq!(NoteType::from("quote".to_string()), NoteType::Quote);
         assert_eq!(NoteType::from("invalid".to_string()), NoteType::General);
     }

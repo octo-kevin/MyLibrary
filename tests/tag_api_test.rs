@@ -1,11 +1,11 @@
 //! Unit tests for tag management API endpoints
-//! 
+//!
 //! Tests the complete CRUD functionality for tags,
 //! including popular tags and usage statistics.
 
 use actix_web::test;
-use serde_json::json;
 use reading_notes_backend::{create_app, models::book::CreateBookRequest};
+use serde_json::json;
 
 mod common;
 
@@ -27,9 +27,9 @@ async fn test_create_tag() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
-    
+
     // Verify response structure
     assert!(response["id"].is_number());
     assert_eq!(response["name"], "Rust编程");
@@ -58,9 +58,9 @@ async fn test_create_tag_english() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
-    
+
     assert_eq!(response["name"], "Programming");
     assert_eq!(response["slug"], "programming");
 }
@@ -83,9 +83,12 @@ async fn test_create_tag_empty_name() {
 
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 422);
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
-    assert!(response["message"].as_str().unwrap().contains("Tag name is required"));
+    assert!(response["message"]
+        .as_str()
+        .unwrap()
+        .contains("Tag name is required"));
 }
 
 /// Test creating duplicate tags
@@ -121,9 +124,12 @@ async fn test_create_duplicate_tag() {
 
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 400);
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
-    assert!(response["message"].as_str().unwrap().contains("already exists"));
+    assert!(response["message"]
+        .as_str()
+        .unwrap()
+        .contains("already exists"));
 }
 
 /// Test getting a specific tag by ID
@@ -154,7 +160,7 @@ async fn test_get_tag() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     assert_eq!(response["id"], tag_id);
     assert_eq!(response["name"], "测试标签");
@@ -167,9 +173,7 @@ async fn test_get_tag_not_found() {
     let test_db = common::setup_test_db();
     let app = test::init_service(create_app(test_db.pool.clone())).await;
 
-    let req = test::TestRequest::get()
-        .uri("/api/tags/99999")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tags/99999").to_request();
 
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 404);
@@ -198,18 +202,16 @@ async fn test_list_tags() {
     }
 
     // List tags
-    let req = test::TestRequest::get()
-        .uri("/api/tags")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tags").to_request();
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     assert_eq!(response["total"], 3);
     assert_eq!(response["page"], 1);
     assert_eq!(response["per_page"], 20);
-    
+
     let tags = response["tags"].as_array().unwrap();
     assert_eq!(tags.len(), 3);
 }
@@ -243,13 +245,13 @@ async fn test_list_tags_pagination() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     assert_eq!(response["total"], 5);
     assert_eq!(response["page"], 1);
     assert_eq!(response["per_page"], 2);
     assert_eq!(response["total_pages"], 3);
-    
+
     let tags = response["tags"].as_array().unwrap();
     assert_eq!(tags.len(), 2);
 }
@@ -288,7 +290,7 @@ async fn test_update_tag() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     assert_eq!(response["id"], tag_id);
     assert_eq!(response["name"], "更新后的标签名");
@@ -322,7 +324,7 @@ async fn test_update_tag_duplicate_name() {
         .uri("/api/tags")
         .set_json(&tag2_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let create_response: serde_json::Value = test::read_body_json(resp).await;
     let tag2_id = create_response["id"].as_i64().unwrap();
@@ -339,9 +341,12 @@ async fn test_update_tag_duplicate_name() {
 
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 400);
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
-    assert!(response["message"].as_str().unwrap().contains("already exists"));
+    assert!(response["message"]
+        .as_str()
+        .unwrap()
+        .contains("already exists"));
 }
 
 /// Test updating a non-existent tag
@@ -396,9 +401,12 @@ async fn test_update_tag_empty_name() {
 
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 422);
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
-    assert!(response["message"].as_str().unwrap().contains("cannot be empty"));
+    assert!(response["message"]
+        .as_str()
+        .unwrap()
+        .contains("cannot be empty"));
 }
 
 /// Test soft deleting a tag
@@ -495,7 +503,7 @@ async fn test_get_popular_tags() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -536,21 +544,23 @@ async fn test_get_popular_tags() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     let popular_tags = response.as_array().unwrap();
-    
+
     // Should have at least the tags we used
     assert!(popular_tags.len() >= 2);
-    
+
     // Find Rust tag (should have usage_count = 2)
-    let rust_tag = popular_tags.iter()
+    let rust_tag = popular_tags
+        .iter()
         .find(|tag| tag["name"] == "Rust")
         .expect("Rust tag should be in popular tags");
     assert_eq!(rust_tag["usage_count"], 2);
-    
+
     // Find 编程 tag (should have usage_count = 1)
-    let programming_tag = popular_tags.iter()
+    let programming_tag = popular_tags
+        .iter()
         .find(|tag| tag["name"] == "编程")
         .expect("编程 tag should be in popular tags");
     assert_eq!(programming_tag["usage_count"], 1);
@@ -583,10 +593,10 @@ async fn test_get_popular_tags_with_limit() {
 
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
-    
+
     let response: serde_json::Value = test::read_body_json(resp).await;
     let popular_tags = response.as_array().unwrap();
-    
+
     // Should return at most 3 tags
     assert!(popular_tags.len() <= 3);
 }
@@ -613,7 +623,7 @@ async fn test_tag_usage_count_with_notes() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
@@ -636,9 +646,7 @@ async fn test_tag_usage_count_with_notes() {
     assert!(resp.status().is_success());
 
     // Check tag usage count
-    let req = test::TestRequest::get()
-        .uri("/api/tags")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tags").to_request();
 
     let resp = test::call_service(&app, req).await;
     let response: serde_json::Value = test::read_body_json(resp).await;
@@ -676,15 +684,13 @@ async fn test_tag_auto_creation_via_notes() {
         .uri("/api/books")
         .set_json(&book_data)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
     let book_response: serde_json::Value = test::read_body_json(resp).await;
     let book_id = book_response["id"].as_i64().unwrap();
 
     // Verify no tags exist initially
-    let req = test::TestRequest::get()
-        .uri("/api/tags")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tags").to_request();
 
     let resp = test::call_service(&app, req).await;
     let response: serde_json::Value = test::read_body_json(resp).await;
@@ -708,16 +714,15 @@ async fn test_tag_auto_creation_via_notes() {
     assert!(resp.status().is_success());
 
     // Verify tags were automatically created
-    let req = test::TestRequest::get()
-        .uri("/api/tags")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tags").to_request();
 
     let resp = test::call_service(&app, req).await;
     let response: serde_json::Value = test::read_body_json(resp).await;
     assert_eq!(response["total"], 3);
 
     let tags = response["tags"].as_array().unwrap();
-    let tag_names: Vec<&str> = tags.iter()
+    let tag_names: Vec<&str> = tags
+        .iter()
         .map(|tag| tag["name"].as_str().unwrap())
         .collect();
 
