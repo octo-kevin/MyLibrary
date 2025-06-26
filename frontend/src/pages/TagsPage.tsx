@@ -32,7 +32,6 @@ import { tagsAPI, type PaginationParams } from '../lib/api'
 import { PageHeader, Loading, ErrorMessage } from '../components/ui'
 
 const { Text } = Typography
-const { TabPane } = Tabs
 
 export default function TagsPage() {
   const queryClient = useQueryClient()
