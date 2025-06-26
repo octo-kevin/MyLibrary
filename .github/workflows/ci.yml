@@ -3,8 +3,32 @@ name: CI
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'README.md'
+      - 'CLAUDE.md'
+      - '.github/**'
+      - 'docker-compose.yml'
+      - 'Dockerfile'
+      - '.env*'
+      - '.gitignore'
+      - 'diesel.toml'
+      - 'release/**'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'README.md'
+      - 'CLAUDE.md'
+      - '.github/**'
+      - 'docker-compose.yml'
+      - 'Dockerfile'
+      - '.env*'
+      - '.gitignore'
+      - 'diesel.toml'
+      - 'release/**'
 
 env:
   CARGO_TERM_COLOR: always
