@@ -21,11 +21,9 @@ import { tagsAPI, type CreateTagRequest } from '../lib/api'
 import { Loading, ErrorMessage } from '../components/ui'
 
 const { Title, Text } = Typography
-const { TextArea } = Input
 
 interface FormData {
   name: string
-  description?: string
 }
 
 export default function TagFormPage() {
@@ -48,7 +46,6 @@ export default function TagFormPage() {
     if (tag) {
       form.setFieldsValue({
         name: tag.name,
-        description: tag.description || '',
       })
     }
   }, [tag, form])
@@ -85,7 +82,6 @@ export default function TagFormPage() {
   const handleSubmit = (values: FormData) => {
     const submitData: CreateTagRequest = {
       name: values.name,
-      description: values.description || null,
     }
 
     if (isEditing) {
@@ -171,21 +167,6 @@ export default function TagFormPage() {
             />
           </Form.Item>
 
-          <Form.Item
-            label="标签描述"
-            name="description"
-            rules={[
-              { max: 200, message: '描述不能超过200个字符' }
-            ]}
-          >
-            <TextArea
-              placeholder="输入标签描述（可选）"
-              rows={3}
-              showCount
-              maxLength={200}
-              disabled={isSubmitting}
-            />
-          </Form.Item>
 
           <Form.Item style={{ marginBottom: 0 }}>
             <Space>

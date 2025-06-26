@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { Typography, Space } from 'antd'
 
 const { Title, Text } = Typography

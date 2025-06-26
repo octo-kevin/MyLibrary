@@ -298,7 +298,7 @@ export default function NotesPage() {
                     {note.tags && note.tags.length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                         {note.tags.slice(0, 3).map((tag, index) => (
-                          <Tag key={index} size="small" style={{ fontSize: 11, margin: 0 }}>
+                          <Tag key={index} style={{ fontSize: 11, margin: 0 }}>
                             {tag}
                           </Tag>
                         ))}

@@ -109,11 +109,11 @@ export default function NoteFormPage() {
 
   const handleSubmit = (values: FormData) => {
     const submitData: CreateNoteRequest = {
-      title: values.title || null,
+      title: values.title || undefined,
       content: values.content,
       note_type: values.note_type,
-      book_id: values.book_id || null,
-      page_reference: values.page_reference || null,
+      book_id: values.book_id || 0,
+      page_reference: values.page_reference || undefined,
       is_favorite: values.is_favorite,
       tags: values.tags,
     }
@@ -248,7 +248,7 @@ export default function NoteFormPage() {
               disabled={isSubmitting}
               showSearch
               filterOption={(input, option) =>
-                (option?.children as string)?.toLowerCase().includes(input.toLowerCase())
+                String(option?.children || '').toLowerCase().includes(input.toLowerCase())
               }
             >
               {books.map(book => (
