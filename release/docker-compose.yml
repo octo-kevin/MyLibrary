@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-reading_notes}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: ${DB_NAME:-reading_notes}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - reading-notes-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-reading_notes}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: ${DOCKER_IMAGE:-your-dockerhub-username/reading-notes}:latest
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      DATABASE_URL: postgres://${DB_USER:-reading_notes}:${DB_PASSWORD:-changeme}@postgres:5432/${DB_NAME:-reading_notes}
+      RUST_LOG: ${RUST_LOG:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - reading-notes-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  postgres_data:
+
+networks:
+  reading-notes-network:
+    driver: bridge

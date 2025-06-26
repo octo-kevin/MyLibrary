@@ -15,8 +15,9 @@ pub mod utils;
 // Re-exports for convenience
 pub use db::{DbPool, establish_connection};
 
-use actix_web::{web, App};
+use actix_web::{web, App, HttpResponse};
 use actix_cors::Cors;
+use actix_files as fs;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -107,6 +108,8 @@ pub fn create_app(pool: DbPool) -> App<impl actix_web::dev::ServiceFactory<
         .app_data(web::Data::new(pool))
         // Apply CORS middleware
         .wrap(cors)
+        // Add health check endpoint
+        .route("/health", web::get().to(health_check))
         // Add Swagger UI
         .service(
             SwaggerUi::new("/docs/{_:.*}")
@@ -114,6 +117,8 @@ pub fn create_app(pool: DbPool) -> App<impl actix_web::dev::ServiceFactory<
         )
         // Configure API routes
         .service(configure_api_routes())
+        // Serve static files (frontend) - must be last
+        .service(fs::Files::new("/", "./static").index_file("index.html"))
 }
 
 /// Configures CORS settings for the application
@@ -179,4 +184,13 @@ fn configure_tag_routes() -> actix_web::Scope {
         .route("/{id}", web::get().to(handlers::tags::get_tag))
         .route("/{id}", web::put().to(handlers::tags::update_tag))
         .route("/{id}", web::delete().to(handlers::tags::delete_tag))
+}
+
+/// Health check endpoint
+async fn health_check() -> HttpResponse {
+    HttpResponse::Ok().json(serde_json::json!({
+        "status": "ok",
+        "service": "reading-notes-backend",
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    }))
 }

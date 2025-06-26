@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'release-*'
+
+env:
+  CARGO_TERM_COLOR: always
+  DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/reading-notes
+
+jobs:
+  test:
+    name: Run Tests
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+    
+  build-and-push-docker:
+    name: Build and Push Docker Images
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+    
+    - name: Extract version from tag
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/release-}" >> $GITHUB_OUTPUT
+    
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm install -g pnpm
+        pnpm install --frozen-lockfile
+        pnpm build
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64,linux/arm/v7
+        push: true
+        tags: |
+          ${{ env.DOCKER_IMAGE }}:latest
+          ${{ env.DOCKER_IMAGE }}:${{ steps.version.outputs.VERSION }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+  create-release-package:
+    name: Create Release Package
+    needs: build-and-push-docker
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Extract version from tag
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/release-}" >> $GITHUB_OUTPUT
+    
+    - name: Create release directory
+      run: |
+        mkdir -p release-package
+        cp -r release/* release-package/
+        
+    - name: Update docker-compose with version
+      run: |
+        sed -i "s/:latest/:${{ steps.version.outputs.VERSION }}/g" release-package/docker-compose.yml
+    
+    - name: Create release archive
+      run: |
+        cd release-package
+        tar -czf ../reading-notes-${{ steps.version.outputs.VERSION }}.tar.gz .
+        cd ..
+        zip -r reading-notes-${{ steps.version.outputs.VERSION }}.zip release-package/*
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          reading-notes-${{ steps.version.outputs.VERSION }}.tar.gz
+          reading-notes-${{ steps.version.outputs.VERSION }}.zip
+        body: |
+          ## 读书笔记管理系统 v${{ steps.version.outputs.VERSION }}
+          
+          ### 🐳 Docker 镜像
+          ```bash
+          docker pull ${{ env.DOCKER_IMAGE }}:${{ steps.version.outputs.VERSION }}
+          ```
+          
+          ### 📦 快速启动
+          1. 下载并解压发布包
+          2. 编辑 `.env` 配置文件
+          3. 运行 `./start.sh` 启动服务
+          
+          ### 🔧 支持的平台
+          - linux/amd64
+          - linux/arm64
+          - linux/arm/v7
+          
+          详细说明请查看压缩包内的 README.md
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

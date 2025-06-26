@@ -10,6 +10,7 @@ description = "Personal reading notes management system backend"
 actix-web = "4.9"
 actix-cors = "0.7"
 actix-rt = "2.10"
+actix-files = "0.6"
 
 # Database
 diesel = { version = "2.2", features = ["postgres", "chrono", "r2d2", "numeric"] }
